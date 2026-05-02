@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ניהול חזרה גנרלית | Design AI 7.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07071a; --sidebar: #0c0c28; --card: #0f0f2e; --card2: #141438;
+      --border: rgba(139,92,246,0.18); --primary: #7c3aed; --light: #a78bfa;
+      --gold: #f59e0b; --text: #f1f5f9; --muted: #94a3b8;
+      --success: #10b981; --error: #ef4444; --cyan: #2cffdf;
+    }
+    body { font-family: 'Assistant', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ---- Login ---- */
+    #loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .login-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 40px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .login-logo { text-align: center; margin-bottom: 32px; }
+    .login-logo h1 {
+      font-size: 22px; font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .login-logo p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+    .form-group input {
+      width: 100%; background: var(--card2); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 12px 14px; color: var(--text);
+      font-family: 'Assistant', sans-serif; font-size: 15px; outline: none; transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .login-btn {
+      width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white; border: none; border-radius: 10px; font-family: 'Assistant', sans-serif;
+      font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 6px;
+    }
+    .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .login-error { color: var(--error); font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+    .login-error.visible { display: block; }
+
+    /* ---- App ---- */
+    #appScreen { display: none; min-height: 100vh; flex-direction: column; }
+    #appScreen.visible { display: flex; }
+
+    .topbar {
+      background: var(--sidebar); border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px; display: flex; align-items: center;
+      justify-content: space-between; position: sticky; top: 0; z-index: 50;
+    }
+    .topbar-brand {
+      font-size: 16px; font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-sm {
+      padding: 7px 14px; border-radius: 8px; font-family: 'Assistant', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-outline { background: transparent; color: var(--muted); border: 1px solid rgba(255,255,255,0.12); }
+    .btn-outline:hover { border-color: var(--muted); color: var(--text); }
+    .btn-export { background: rgba(16,185,129,0.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.3); }
+    .btn-export:hover { background: rgba(16,185,129,0.25); }
+
+    .main-content { padding: 28px 24px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .stat-value { font-size: 32px; font-weight: 800; margin-top: 6px; }
+    .stat-value.purple { color: var(--light); }
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.green { color: var(--success); }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Speaker sections */
+    .section-title {
+      font-size: 14px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 16px; margin-top: 32px;
+    }
+
+    .speaker-block {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; margin-bottom: 16px; overflow: hidden;
+    }
+    .speaker-block-header {
+      display: flex; align-items: center; gap: 16px;
+      padding: 16px 20px; cursor: pointer;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .speaker-block-header:hover { background: rgba(124,58,237,0.06); }
+    .speaker-thumb {
+      width: 52px; height: 52px; border-radius: 50%;
+      object-fit: cover; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+    .speaker-meta { flex: 1; }
+    .speaker-meta-name { font-size: 15px; font-weight: 700; }
+    .speaker-meta-talk { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .speaker-count {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+    }
+    .speaker-count.has-data { background: rgba(16,185,129,0.12); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.25); }
+    .speaker-count.no-data { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid rgba(255,255,255,0.08); }
+    .speaker-chevron { color: var(--muted); font-size: 18px; transition: transform 0.2s; }
+    .speaker-block.open .speaker-chevron { transform: rotate(90deg); }
+
+    .speaker-feedback-list { display: none; border-top: 1px solid var(--border); }
+    .speaker-block.open .speaker-feedback-list { display: block; }
+
+    .avg-bar {
+      padding: 14px 20px; background: rgba(0,0,0,0.15);
+      display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border);
+    }
+    .avg-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .avg-stars { color: var(--gold); font-size: 18px; letter-spacing: 2px; }
+    .avg-number { font-size: 14px; font-weight: 800; color: var(--gold); }
+
+    .feedback-item {
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .feedback-item:last-child { border-bottom: none; }
+    .feedback-meta {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .feedback-num { font-size: 11px; color: var(--muted); font-weight: 600; }
+    .feedback-date { font-size: 11px; color: var(--muted); }
+    .feedback-stars { color: var(--gold); font-size: 16px; }
+    .feedback-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .feedback-fields { grid-template-columns: 1fr; } }
+    .feedback-field-label { font-size: 11px; font-weight: 700; color: var(--light); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .feedback-field-val { font-size: 14px; color: var(--text); line-height: 1.6; }
+    .feedback-field-val.empty { color: var(--muted); font-style: italic; }
+
+    .no-feedback { padding: 32px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 60px; color: var(--muted); }
+
+    @media (max-width: 700px) {
+      .main-content { padding: 16px; }
+      .topbar { padding: 0 16px; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>🎬 ניהול חזרה גנרלית</h1>
+      <p>Design AI 7.0 · כניסה מנהלים בלבד</p>
+    </div>
+    <div class="form-group">
+      <label>כתובת מייל</label>
+      <input type="email" id="loginEmail" placeholder="info.aidesign1@gmail.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>סיסמה</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">כניסה לפאנל</button>
+    <div class="login-error" id="loginError">אימייל או סיסמה שגויים</div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="appScreen">
+  <header class="topbar">
+    <div class="topbar-brand">🎬 Design AI 7.0 · חזרה גנרלית</div>
+    <div class="topbar-actions">
+      <button class="btn-sm btn-export" onclick="exportCSV()">⬇ ייצא CSV</button>
+      <button class="btn-sm btn-outline" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div id="loadingEl" class="loading">טוען נתונים...</div>
+    <div id="dashContent" style="display:none">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="section-title">פירוט פידבק לפי מרצה</div>
+      <div id="speakerBlocks"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const ADMIN_CONFIG = {
+    adminEmail:    'info.aidesign1@gmail.com',
+    adminPassword: 'DesignAI2024',
+  };
+
+  const SPEAKERS = [
+    { name: 'דניאל בוארון',         role: 'Design AI Founder',                        talk: 'דברי פתיחה — DESIGN TO CODE',                        img: 'https://designai.co.il/wp-content/uploads/2025/12/danielb.png' },
+    { name: 'גל דולב',              role: 'Product Manager & AI Thought Leader',        talk: 'עקרונות קריטים לעיצוב חוויות מעולות ליוזר עם AI', img: 'https://designai.co.il/wp-content/uploads/2025/12/Frame-2147255694.png' },
+    { name: 'חן האנה ויצמן',        role: 'Staff Product Designer, Stealth Start-Up',  talk: 'איך Cursor שינה את ה-day to day של מעצבים',          img: 'https://designai.co.il/wp-content/uploads/2025/12/חן-ויצמן.png' },
+    { name: 'ד"ר יעקב גרינשפן',    role: 'UX Strategy',                                talk: 'אהבה, אמון, AI: בניית אפליקציות AI מובטחות',         img: 'https://designai.co.il/wp-content/uploads/2025/12/יעקב-גרינשפן.png' },
+    { name: 'רון ברנוב',            role: 'Creative Workflow Advocate, Weavy',          talk: 'Workflow First: תהליך יצירתי עם AI ו-Weavy',          img: 'https://designai.co.il/wp-content/uploads/2025/12/רון-ברנוב.png' },
+    { name: 'שחר קגן',              role: 'Freelance UX/UI/PM',                         talk: 'שכבת ה-UX החסרה במוצרי AI',                          img: 'https://designai.co.il/wp-content/uploads/2025/12/שחר-קגן.png' },
+    { name: 'עידו זייפמן וקרן שגב', role: 'Co-Founder & Co-CEO, Kido',                 talk: 'סוף כל סוף העבודה הידנית ב-Design System',           img: 'https://designai.co.il/wp-content/uploads/2025/12/Frame-2147255712.png' },
+    { name: 'ענבל ברקוביץ',         role: 'Head of UX, Ocean',                          talk: 'עיצוב בעידן ה-GenUI',                                 img: 'https://designai.co.il/wp-content/uploads/2026/01/ענבל-ברקוביץ.png' },
+    { name: 'טל זגורי',             role: 'מנהל מוצר ו-AI Storyteller',                 talk: 'סטוריטלינג בעולם החדש: איך למכור את הרעיונות שלכם ב-2 דקות?',               img: 'https://designai.co.il/wp-content/uploads/2025/12/Frame-2147255703.png' },
+    { name: 'שירה וינברג הראל',     role: 'Product and AI Expert, Beyond AI',           talk: 'מנטור לכל עובד.ת: "נבחרת מנטורים" בעזרת AI',         img: 'https://designai.co.il/wp-content/uploads/2025/12/שירהוינברגהראל.png' },
+    { name: 'שלי אור גיסר',         role: 'Gen AI Design Lead, GITAM BBDO',             talk: 'Creative Engineering — הנדסת חשיבה עיצובית',         img: 'https://designai.co.il/wp-content/uploads/2025/12/שלי-אור-גיסר.png' },
+  ];
+
+  let allData = [];
+  let adminToken = null;
+
+  // ---- Auth ----
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('loginError');
+    errEl.classList.remove('visible');
+
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.ok && data.token) {
+        adminToken = data.token;
+        localStorage.setItem('rehearsal_admin_token', adminToken);
+        showApp();
+        return;
+      }
+      errEl.textContent = data.error || 'אימייל או סיסמה שגויים';
+      errEl.classList.add('visible');
+    } catch {
+      errEl.textContent = 'השרת אינו פועל — הפעל את server.js';
+      errEl.classList.add('visible');
+    }
+  }
+
+  function isLoggedIn() { return !!localStorage.getItem('rehearsal_admin_token'); }
+
+  function logout() {
+    localStorage.removeItem('rehearsal_admin_token');
+    adminToken = null;
+    document.getElementById('appScreen').classList.remove('visible');
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  async function showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').classList.add('visible');
+    await loadData();
+  }
+
+  // ---- Data ----
+  async function loadData() {
+    document.getElementById('loadingEl').style.display = 'block';
+    document.getElementById('dashContent').style.display = 'none';
+
+    const token = adminToken || localStorage.getItem('rehearsal_admin_token');
+    if (!token) { logout(); return; }
+
+    try {
+      const res = await fetch('/api/rehearsal/responses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401) { logout(); return; }
+      allData = await res.json();
+      renderDashboard();
+    } catch (err) {
+      document.getElementById('loadingEl').innerHTML =
+        `⚠️ שגיאה בטעינת נתונים: ${err.message}`;
+    }
+  }
+
+  // ---- Render ----
+  function renderDashboard() {
+    document.getElementById('loadingEl').style.display = 'none';
+    document.getElementById('dashContent').style.display = 'block';
+    renderStats();
+    renderSpeakerBlocks();
+  }
+
+  function renderStats() {
+    const total = allData.length;
+    const speakersWithFeedback = new Set(allData.map(r => r.speakerName)).size;
+    const allRatings = allData.map(r => r.rating).filter(Boolean);
+    const avgRating = allRatings.length
+      ? (allRatings.reduce((a, b) => a + Number(b), 0) / allRatings.length).toFixed(1)
+      : null;
+    const sessions = new Set(allData.map(r => r.sessionId)).size;
+
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">סה"כ פידבקים</div>
+        <div class="stat-value purple">${total}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">מרצים שקיבלו פידבק</div>
+        <div class="stat-value green">${speakersWithFeedback}</div>
+        <div class="stat-sub">מתוך ${SPEAKERS.length}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ממוצע דירוג כללי</div>
+        <div class="stat-value gold">${avgRating ? avgRating + ' ★' : '—'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">משתתפים שונים</div>
+        <div class="stat-value purple">${sessions}</div>
+      </div>
+    `;
+  }
+
+  function renderSpeakerBlocks() {
+    const container = document.getElementById('speakerBlocks');
+    container.innerHTML = '';
+
+    SPEAKERS.forEach(sp => {
+      const feedbacks = allData.filter(r => r.speakerName === sp.name);
+      const avgRating = feedbacks.length
+        ? feedbacks.reduce((a, r) => a + Number(r.rating || 0), 0) / feedbacks.length
+        : 0;
+
+      const block = document.createElement('div');
+      block.className = 'speaker-block';
+
+      const starsHtml = (v) => {
+        const full = Math.round(v);
+        return '★'.repeat(full) + '☆'.repeat(5 - full);
+      };
+
+      block.innerHTML = `
+        <div class="speaker-block-header" onclick="toggleBlock(this)">
+          <img class="speaker-thumb" src="${sp.img}" alt="${sp.name}"
+               onerror="this.src='/speakers/speaker.png'">
+          <div class="speaker-meta">
+            <div class="speaker-meta-name">${sp.name}</div>
+            <div class="speaker-meta-talk">${sp.talk}</div>
+          </div>
+          <span class="speaker-count ${feedbacks.length ? 'has-data' : 'no-data'}">
+            ${feedbacks.length ? `✓ ${feedbacks.length} פידבקים` : 'אין פידבק עדיין'}
+          </span>
+          <span class="speaker-chevron">›</span>
+        </div>
+        <div class="speaker-feedback-list">
+          ${feedbacks.length ? `
+            <div class="avg-bar">
+              <span class="avg-label">ממוצע דירוג</span>
+              <span class="avg-stars">${starsHtml(avgRating)}</span>
+              <span class="avg-number">${avgRating.toFixed(1)}</span>
+            </div>
+            ${feedbacks.map((f, i) => `
+              <div class="feedback-item">
+                <div class="feedback-meta">
+                  <span class="feedback-num">#${i + 1}</span>
+                  <span class="feedback-date">${f.submitted_at || ''}</span>
+                  <span class="feedback-stars">${'★'.repeat(f.rating || 0)}${'☆'.repeat(5 - (f.rating || 0))}</span>
+                </div>
+                <div class="feedback-fields">
+                  <div>
+                    <div class="feedback-field-label">מה אהבתי</div>
+                    <div class="feedback-field-val ${!f.liked ? 'empty' : ''}">${f.liked || 'לא מולא'}</div>
+                  </div>
+                  <div>
+                    <div class="feedback-field-label">מה הייתי משפר</div>
+                    <div class="feedback-field-val ${!f.improve ? 'empty' : ''}">${f.improve || 'לא מולא'}</div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          ` : '<div class="no-feedback">אין פידבק על הרצאה זו עדיין</div>'}
+        </div>
+      `;
+
+      container.appendChild(block);
+    });
+  }
+
+  function toggleBlock(header) {
+    header.closest('.speaker-block').classList.toggle('open');
+  }
+
+  // ---- Export CSV ----
+  function exportCSV() {
+    if (!allData.length) { alert('אין פידבקים לייצוא'); return; }
+    const headers = ['מרצה', 'הרצאה', 'תאריך', 'דירוג', 'מה אהבתי', 'מה הייתי משפר'];
+    const rows = allData.map(r => [
+      r.speakerName || '', r.speakerTalk || '', r.submitted_at || '',
+      r.rating || 0, r.liked || '', r.improve || ''
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`));
+    const csv = '﻿' + [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `design-ai-rehearsal-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  }
+
+  // ---- Init ----
+  if (isLoggedIn()) showApp();
+</script>
+</body>
+</html>

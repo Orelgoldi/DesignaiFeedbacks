@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>פאנל ניהול | Design AI 6.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #07071a;
+      --sidebar: #0c0c28;
+      --card: #0f0f2e;
+      --card2: #141438;
+      --border: rgba(139,92,246,0.18);
+      --primary: #7c3aed;
+      --light: #a78bfa;
+      --gold: #f59e0b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --success: #10b981;
+      --error: #ef4444;
+      --sidebar-w: 220px;
+    }
+    body {
+      font-family: 'Assistant', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ---- Login ---- */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .login-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .login-logo h1 {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg,#fff,var(--light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .login-logo p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .form-group input {
+      width: 100%;
+      background: var(--card2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: 'Assistant', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Assistant', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+    .login-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .login-error {
+      color: var(--error);
+      font-size: 13px;
+      text-align: center;
+      margin-top: 12px;
+      display: none;
+    }
+    .login-error.visible { display: block; }
+
+    /* ---- App layout ---- */
+    #appScreen { display: none; min-height: 100vh; }
+    #appScreen.visible {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .topbar {
+      background: var(--sidebar);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-brand {
+      font-size: 16px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .btn-sm {
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-family: 'Assistant', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .btn-outline:hover { border-color: var(--muted); color: var(--text); }
+    .btn-success {
+      background: rgba(16,185,129,0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16,185,129,0.3);
+    }
+    .btn-success:hover { background: rgba(16,185,129,0.25); }
+
+    /* Main content */
+    .main-content {
+      padding: 28px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Stat cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+    .stat-value { font-size: 32px; font-weight: 800; margin-top: 6px; }
+    .stat-value.purple { color: var(--light); }
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.green { color: var(--success); }
+    .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Charts grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+    }
+    .chart-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* Speaker ratings chart */
+    .speaker-chart-card {
+      grid-column: 1 / -1;
+    }
+    .speaker-chart-wrap { position: relative; height: 320px; }
+
+    /* Responses table */
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+    .table-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .table-header h3 { font-size: 16px; font-weight: 700; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead th {
+      padding: 10px 16px;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+    tbody tr:hover { background: rgba(124,58,237,0.06); }
+    tbody td {
+      padding: 12px 16px;
+      color: var(--text);
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-green { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #fcd34d; }
+    .badge-red { background: rgba(239,68,68,0.15); color: #fca5a5; }
+
+    /* Detail modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 28px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(255,255,255,0.08);
+      border: none;
+      color: var(--muted);
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; padding-left: 40px; }
+    .detail-row {
+      display: flex;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { font-size: 13px; color: var(--muted); font-weight: 600; min-width: 130px; }
+    .detail-val { font-size: 14px; color: var(--text); flex: 1; }
+    .stars-display { color: var(--gold); letter-spacing: 2px; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .main-content { padding: 16px; }
+      .topbar { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>⚙️ פאנל ניהול</h1>
+      <p>Design AI 7.0 · כניסה מנהלים בלבד</p>
+    </div>
+    <div class="form-group">
+      <label>כתובת מייל</label>
+      <input type="email" id="loginEmail" placeholder="info.aidesign1@gmail.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>סיסמה</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter') doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">כניסה לפאנל</button>
+    <div class="login-error" id="loginError">אימייל או סיסמה שגויים</div>
+  </div>
+</div>
+
+<!-- App Screen -->
+<div id="appScreen">
+  <header class="topbar">
+    <div class="topbar-brand">📊 Design AI 7.0 · ניהול</div>
+    <div class="topbar-actions">
+      <button class="btn-sm btn-success" onclick="exportCSV()">⬇ ייצא CSV</button>
+      <button class="btn-sm btn-outline" onclick="logout()">יציאה</button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div id="loadingEl" class="loading">טוען נתונים...</div>
+    <div id="dashContent" style="display:none">
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">משך נוכחות</div>
+          <div class="chart-wrap"><canvas id="chartAttendance"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">כלי AI שנלמדו</div>
+          <div class="chart-wrap"><canvas id="chartAiTools"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">השתתפות עתידית</div>
+          <div class="chart-wrap"><canvas id="chartFuture"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">המלצה לעמיתים</div>
+          <div class="chart-wrap"><canvas id="chartRec"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">עדיפות לשיפור</div>
+          <div class="chart-wrap"><canvas id="chartImprovement"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">רמת תוכן</div>
+          <div class="chart-wrap"><canvas id="chartLevel"></canvas></div>
+        </div>
+        <div class="chart-card speaker-chart-card">
+          <div class="chart-title">ממוצע דירוג מרצים</div>
+          <div class="speaker-chart-wrap"><canvas id="chartSpeakers"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <h3>כל התגובות</h3>
+          <span id="responseCount" style="font-size:13px;color:var(--muted)"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>תאריך</th>
+                <th>נוכחות</th>
+                <th>כלים</th>
+                <th>תוכן</th>
+                <th>המלצה</th>
+                <th>אוכל</th>
+                <th>מיקום</th>
+                <th>רישום</th>
+              </tr>
+            </thead>
+            <tbody id="responsesBody"></tbody>
+          </table>
+          <div id="emptyState" class="empty-state" style="display:none">
+            <div class="empty-state-icon">📭</div>
+            <p>אין תגובות עדיין</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- dashContent -->
+  </main>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="detailModal">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+  // ════ CONFIGURATION — עדכן לאותם ערכים שב-index.html ════
+  const CONFIG = {
+    appsScriptUrl: 'PASTE_YOUR_APPS_SCRIPT_URL_HERE',
+    adminEmail:    'info.aidesign1@gmail.com',
+    adminPassword: 'DesignAI2024',
+  };
+  // ════════════════════════════════════════════════════════
+
+  const FIELD_LABELS = {
+    'נוכחות': 'נוכחות', 'כלי AI': 'כלי AI', 'כנס עתידי': 'כנס עתידי',
+    'מעשיות תוכן': 'מעשיות תוכן', 'דירוג אוכל': 'דירוג אוכל',
+    'דירוג מיקום': 'דירוג מיקום', 'דירוג רישום': 'דירוג רישום',
+    'הרצאות מועדפות': 'הרצאות מועדפות', 'המלצה': 'המלצה', 'משוב חופשי': 'משוב חופשי',
+    // local server keys
+    overallRating: 'דירוג כללי', attendance: 'נוכחות', aiToolsLearned: 'כלי AI',
+    futureAttendance: 'כנס עתידי', contentPracticality: 'מעשיות תוכן',
+    contentLevel: 'רמת תוכן', topicsForNext: 'נושאים לכנס הבא',
+    foodRating: 'דירוג אוכל', venueRating: 'דירוג מיקום',
+    registrationRating: 'דירוג רישום', networkingRating: 'דירוג נטוורקינג',
+    favoriteSessions: 'הרצאות מועדפות', recommendation: 'המלצה',
+    topImprovement: 'עדיפות לשיפור', openFeedback: 'משוב חופשי'
+  };
+
+  const CHART_COLORS = [
+    'rgba(124,58,237,0.8)', 'rgba(6,182,212,0.8)', 'rgba(16,185,129,0.8)',
+    'rgba(245,158,11,0.8)', 'rgba(239,68,68,0.8)', 'rgba(167,139,250,0.8)'
+  ];
+
+  let allData = [];
+
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.font.family = 'Assistant';
+
+  // ---- AUTH ----
+  const USE_LOCAL = !CONFIG.appsScriptUrl || CONFIG.appsScriptUrl === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
+
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errEl = document.getElementById('loginError');
+    errEl.classList.remove('visible');
+
+    if (USE_LOCAL) {
+      // Authenticate via local Express server
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.ok && data.token) {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_auth', btoa(email + ':' + password));
+          showApp();
+          return;
+        }
+        errEl.textContent = data.error || 'אימייל או סיסמה שגויים';
+        errEl.classList.add('visible');
+        return;
+      } catch {
+        errEl.textContent = 'השרת אינו פועל — הפעל את server.js';
+        errEl.classList.add('visible');
+        return;
+      }
+    }
+
+    // Apps Script mode: client-side check
+    if (email === CONFIG.adminEmail && password === CONFIG.adminPassword) {
+      localStorage.setItem('admin_auth', btoa(email + ':' + password));
+      showApp();
+    } else {
+      errEl.textContent = 'אימייל או סיסמה שגויים';
+      errEl.classList.add('visible');
+    }
+  }
+
+  function isLoggedIn() {
+    if (USE_LOCAL) return !!localStorage.getItem('admin_token');
+    const stored = localStorage.getItem('admin_auth');
+    if (!stored) return false;
+    try {
+      const [e, p] = atob(stored).split(':');
+      return e === CONFIG.adminEmail && p === CONFIG.adminPassword;
+    } catch { return false; }
+  }
+
+  function logout() {
+    localStorage.removeItem('admin_auth');
+    localStorage.removeItem('admin_token');
+    document.getElementById('appScreen').classList.remove('visible');
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  async function showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').classList.add('visible');
+    await loadData();
+  }
+
+  // ---- DATA ----
+  async function loadData() {
+    document.getElementById('loadingEl').style.display = 'block';
+    document.getElementById('loadingEl').textContent = 'טוען נתונים...';
+    document.getElementById('dashContent').style.display = 'none';
+
+    if (USE_LOCAL) {
+      // Fetch from local Express server
+      try {
+        const token = localStorage.getItem('admin_token');
+        if (!token) { logout(); return; }
+        const res = await fetch('/api/admin/responses', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.status === 401) { logout(); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        allData = await res.json();
+        renderDashboard();
+      } catch (err) {
+        document.getElementById('loadingEl').innerHTML =
+          `⚠️ שגיאה בטעינת נתונים: ${err.message}<br>
+           <small style="color:var(--muted)">ודא שהשרת פועל עם <code>node server.js</code></small>`;
+      }
+      return;
+    }
+
+    // Apps Script mode
+    try {
+      const url = `${CONFIG.appsScriptUrl}?action=responses&password=${encodeURIComponent(CONFIG.adminPassword)}`;
+      const res = await fetch(url, { redirect: 'follow' });
+      const raw = await res.json();
+      allData = Array.isArray(raw) ? raw : [];
+      renderDashboard();
+    } catch (err) {
+      document.getElementById('loadingEl').innerHTML =
+        `⚠️ שגיאת CORS — פתחו את ה-Apps Script URL ישירות בדפדפן כדי לאשר הרשאות.<br>
+         <small style="color:var(--muted)">${err.message}</small>`;
+    }
+  }
+
+  // ---- RENDER ----
+  function renderDashboard() {
+    document.getElementById('loadingEl').style.display = 'none';
+    document.getElementById('dashContent').style.display = 'block';
+
+    renderStats();
+    renderCharts();
+    renderTable();
+  }
+
+  // Support both Hebrew keys (Apps Script) and English keys (local server)
+  function getField(r, he, en) { return r[he] !== undefined ? r[he] : r[en]; }
+
+  function renderStats() {
+    const n = allData.length;
+    const avgOverall = avg(allData.map(r => r.overallRating).filter(Boolean));
+    const avgFood    = avg(allData.map(r => getField(r,'דירוג אוכל','foodRating')).filter(Boolean));
+    const avgVenue   = avg(allData.map(r => getField(r,'דירוג מיקום','venueRating')).filter(Boolean));
+    const avgReg     = avg(allData.map(r => getField(r,'דירוג רישום','registrationRating')).filter(Boolean));
+    const avgNet     = avg(allData.map(r => r.networkingRating).filter(Boolean));
+    const willAttend = allData.filter(r =>
+      getField(r,'כנס עתידי','futureAttendance') === 'בהחלט אגיע').length;
+
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">סה"כ תגובות</div>
+        <div class="stat-value purple">${n}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">דירוג כללי</div>
+        <div class="stat-value gold">${avgOverall ? avgOverall.toFixed(1) + ' ★' : '—'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ממוצע אוכל</div>
+        <div class="stat-value gold">${avgFood ? avgFood.toFixed(1) + ' ★' : '—'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ממוצע מיקום</div>
+        <div class="stat-value gold">${avgVenue ? avgVenue.toFixed(1) + ' ★' : '—'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ממוצע רישום</div>
+        <div class="stat-value gold">${avgReg ? avgReg.toFixed(1) + ' ★' : '—'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ממוצע נטוורקינג</div>
+        <div class="stat-value gold">${avgNet ? avgNet.toFixed(1) + ' ★' : '—'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">יגיעו לכנס הבא</div>
+        <div class="stat-value green">${n ? Math.round(willAttend/n*100) : 0}%</div>
+        <div class="stat-sub">${willAttend} מתוך ${n}</div>
+      </div>
+    `;
+  }
+
+  function renderCharts() {
+    if (!allData.length) return;
+
+    renderPie('chartAttendance', allData, 'נוכחות', 'attendance');
+    renderPie('chartAiTools', allData, 'כלי AI', 'aiToolsLearned');
+    renderPie('chartFuture', allData, 'כנס עתידי', 'futureAttendance');
+    renderPie('chartRec', allData, 'המלצה', 'recommendation');
+    renderPie('chartImprovement', allData, null, 'topImprovement');
+    renderPie('chartLevel', allData, null, 'contentLevel');
+    renderSpeakerBar();
+  }
+
+  function renderPie(canvasId, data, heField, enField) {
+    const counts = {};
+    data.forEach(r => {
+      const v = (heField ? r[heField] : undefined) || (enField ? r[enField] : undefined) || 'לא צוין';
+      counts[v] = (counts[v] || 0) + 1;
+    });
+    const labels = Object.keys(counts);
+    const values = Object.values(counts);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    if (canvas._chart) canvas._chart.destroy();
+    canvas._chart = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: CHART_COLORS, borderWidth: 2, borderColor: '#0f0f2e' }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 12, font: { size: 12, family: 'Assistant' } } }
+        }
+      }
+    });
+  }
+
+  function renderSpeakerBar() {
+    const speakerSums = {};
+    const speakerCounts = {};
+
+    allData.forEach(r => {
+      const sr = r['דירוגי מרצים'] || r.speakerRatings;
+      if (!sr) return;
+      Object.entries(typeof sr === 'string' ? JSON.parse(sr) : sr).forEach(([name, rating]) => {
+        if (rating > 0) {
+          speakerSums[name] = (speakerSums[name] || 0) + Number(rating);
+          speakerCounts[name] = (speakerCounts[name] || 0) + 1;
+        }
+      });
+    });
+
+    const names = Object.keys(speakerSums);
+    if (!names.length) return;
+
+    const avgs = names.map(n => (speakerSums[n] / speakerCounts[n]).toFixed(2));
+    const counts = names.map(n => speakerCounts[n]);
+
+    const canvas = document.getElementById('chartSpeakers');
+    if (!canvas) return;
+    if (canvas._chart) canvas._chart.destroy();
+    canvas._chart = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: names,
+        datasets: [{
+          label: 'ממוצע דירוג',
+          data: avgs,
+          backgroundColor: 'rgba(124,58,237,0.7)',
+          borderColor: 'rgba(139,92,246,1)',
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { min: 0, max: 5, ticks: { stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { grid: { display: false } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: (ctx) => `מספר דירוגים: ${counts[ctx.dataIndex]}`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('responsesBody');
+    const emptyEl = document.getElementById('emptyState');
+    const countEl = document.getElementById('responseCount');
+
+    countEl.textContent = `${allData.length} תגובות`;
+
+    if (!allData.length) {
+      tbody.innerHTML = '';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    tbody.innerHTML = allData.map((r, i) => {
+      const rec = getField(r,'המלצה','recommendation');
+      const recBadge = recClass(rec);
+      const dateRaw = r['תאריך'] || r.submitted_at || '';
+      const dateStr = dateRaw.toString().split(' ')[0] || '—';
+      const timeStr = dateRaw.toString().split(' ')[1]?.slice(0,5) || '';
+      return `
+        <tr onclick="showDetail(${i})">
+          <td style="color:var(--muted)">${r['מזהה'] || r.id || i+1}</td>
+          <td style="color:var(--muted);font-size:13px">${dateStr}<br><span style="font-size:11px">${timeStr}</span></td>
+          <td>${short(getField(r,'נוכחות','attendance'))}</td>
+          <td>${short(getField(r,'כלי AI','aiToolsLearned'))}</td>
+          <td>${short(getField(r,'מעשיות תוכן','contentPracticality'))}</td>
+          <td><span class="badge ${recBadge[0]}">${recBadge[1]}</span></td>
+          <td>${stars(getField(r,'דירוג אוכל','foodRating'))}</td>
+          <td>${stars(getField(r,'דירוג מיקום','venueRating'))}</td>
+          <td>${stars(getField(r,'דירוג רישום','registrationRating'))}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ---- DETAIL MODAL ----
+  function showDetail(idx) {
+    const r = allData[idx];
+    document.getElementById('modalTitle').textContent = `תגובה #${r.id || idx+1}`;
+    const body = document.getElementById('modalBody');
+
+    const fields = ['overallRating','attendance','aiToolsLearned','futureAttendance',
+                    'contentPracticality','contentLevel','topicsForNext',
+                    'foodRating','venueRating','registrationRating','networkingRating',
+                    'favoriteSessions','recommendation','topImprovement','openFeedback'];
+
+    let html = fields.map(key => {
+      let val = r[key];
+      if (!val && val !== 0) return '';
+      let display = '';
+      if (['foodRating','venueRating','registrationRating'].includes(key)) {
+        display = `<span class="stars-display">${'★'.repeat(val)}${'☆'.repeat(5-val)}</span> (${val}/5)`;
+      } else if (Array.isArray(val)) {
+        display = val.length ? val.join(', ') : 'לא נבחר';
+      } else {
+        display = String(val);
+      }
+      return `<div class="detail-row">
+        <div class="detail-key">${FIELD_LABELS[key] || key}</div>
+        <div class="detail-val">${display}</div>
+      </div>`;
+    }).join('');
+
+    // Speaker ratings
+    if (r.speakerRatings) {
+      const rated = Object.entries(r.speakerRatings).filter(([,v]) => v > 0);
+      if (rated.length) {
+        html += `<div class="detail-row" style="flex-direction:column;gap:8px">
+          <div class="detail-key">דירוגי מרצים</div>
+          ${rated.map(([name,v]) => `
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+              <span>${name}</span>
+              <span class="stars-display" style="font-size:14px">${'★'.repeat(v)}${'☆'.repeat(5-v)}</span>
+            </div>
+          `).join('')}
+        </div>`;
+      }
+    }
+
+    body.innerHTML = html || '<p style="color:var(--muted)">אין מידע</p>';
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal(e) {
+    if (e.target === document.getElementById('modalOverlay')) {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+  }
+  function closeModalBtn() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  // ---- EXPORT CSV ----
+  function exportCSV() {
+    if (!allData.length) { alert('אין תגובות לייצוא'); return; }
+
+    const headers = ['מזהה','תאריך','נוכחות','כלי AI','השתתפות עתידית','מעשיות תוכן',
+                     'דירוג אוכל','דירוג מיקום','דירוג רישום','הרצאות מועדפות','המלצה','משוב'];
+    const rows = allData.map(r => [
+      r.id || '',
+      r.submitted_at || '',
+      r.attendance || '',
+      r.aiToolsLearned || '',
+      r.futureAttendance || '',
+      r.contentPracticality || '',
+      r.foodRating || 0,
+      r.venueRating || 0,
+      r.registrationRating || 0,
+      (r.favoriteSessions || []).join(' | '),
+      r.recommendation || '',
+      (r.openFeedback || '').replace(/\n/g, ' ')
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`));
+
+    const csv = '﻿' + [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `design-ai-6-responses-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---- UTILS ----
+  function avg(arr) {
+    if (!arr.length) return 0;
+    return arr.reduce((a,b) => a + Number(b), 0) / arr.length;
+  }
+  function stars(n) {
+    if (!n) return '<span style="color:var(--muted)">—</span>';
+    return `<span style="color:var(--gold)">${'★'.repeat(n)}</span>`;
+  }
+  function short(s) {
+    if (!s) return '<span style="color:var(--muted)">—</span>';
+    const map = {
+      'נשארתי כל היום': 'כל היום',
+      'עזבתי באמצע עקב אילוצים': 'אילוצים',
+      'עזבתי באמצע עקב חוסר עניין': 'חוסר עניין',
+      'למדתי על כלים רבים חדשים': 'רבים',
+      'למדתי 1–2 כלים חדשים': '1–2',
+      'לא למדתי שום דבר חדש': 'אפס',
+      'מעשי ומובן מאוד': 'מאוד',
+      'מעשי במידה מסוימת': 'מסוימת',
+      'לא מעשי בכלל': 'לא מעשי',
+    };
+    return map[s] || s;
+  }
+  function recClass(rec) {
+    if (rec === 'בהחלט אמליץ') return ['badge-green', '✓ כן'];
+    if (rec === 'לא אמליץ') return ['badge-red', '✗ לא'];
+    return ['badge-yellow', '~ תלוי'];
+  }
+
+  // ---- INIT ----
+  if (isLoggedIn()) {
+    showApp();
+  }
+</script>
+</body>
+</html>

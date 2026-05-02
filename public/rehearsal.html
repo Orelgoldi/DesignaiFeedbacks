@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>פידבק חזרה גנרלית | Design AI 7.0</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #041042;
+      --navy2:  #0A1153;
+      --navy3:  #06154e;
+      --purple: #981fb6;
+      --cyan:   #2cffdf;
+      --white:  #ffffff;
+      --muted:  rgba(255,255,255,0.5);
+      --card:   rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.1);
+      --gold:   #f5c842;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Assistant', sans-serif;
+      background: var(--navy);
+      color: var(--white);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Background shapes ─── */
+    .bg-shapes { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .bg-shape-1 {
+      position: absolute; width: 340px; height: 680px;
+      background: rgba(152,31,182,0.15); border-radius: 340px 0 0 340px;
+      top: -80px; right: -60px;
+    }
+    .bg-shape-2 {
+      position: absolute; width: 260px; height: 260px;
+      background: rgba(44,255,223,0.06); border-radius: 50%;
+      bottom: 60px; left: -80px;
+    }
+    .bg-sparkle { position: absolute; width: 36px; height: 36px; top: 200px; right: 80px; }
+    .bg-sparkle::before, .bg-sparkle::after { content: ''; position: absolute; background: rgba(44,255,223,0.25); }
+    .bg-sparkle::before { width: 5px; height: 36px; left: 15px; top: 0; }
+    .bg-sparkle::after  { width: 36px; height: 5px; top: 15px; left: 0; }
+
+    /* ─── Views ─── */
+    #gridView, #formView {
+      position: relative; z-index: 1;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+    #formView { display: none; }
+
+    /* ─── Header ─── */
+    .page-header {
+      text-align: center;
+      padding: 52px 20px 36px;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .logo { width: 100px; filter: brightness(0) invert(1); margin-bottom: 24px; }
+    .page-tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 10px;
+    }
+    .page-title {
+      font-size: clamp(28px, 5vw, 44px); font-weight: 800;
+      letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 10px;
+    }
+    .page-title .accent {
+      background: linear-gradient(135deg, var(--cyan), #9b51e0);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .page-desc { font-size: 15px; color: var(--muted); line-height: 1.7; }
+
+    /* ─── Progress banner ─── */
+    .progress-banner {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: rgba(44,255,223,0.06); border: 1px solid rgba(44,255,223,0.18);
+      border-radius: 10px; padding: 10px 20px;
+      font-size: 13px; color: var(--cyan); font-weight: 600;
+      margin: 0 auto 32px; max-width: 380px;
+    }
+    .progress-banner .pulse { width: 7px; height: 7px; background: var(--cyan); border-radius: 50%; animation: p 2s infinite; flex-shrink: 0; }
+    @keyframes p { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)} }
+
+    /* ─── Speaker Grid ─── */
+    .grid-wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 60px; }
+    .speaker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 800px) { .speaker-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+    @media (max-width: 560px) { .speaker-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+
+    .sp-card {
+      background: var(--navy2);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .sp-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.3); border-color: rgba(152,31,182,0.4); }
+    .sp-card.done { border-color: rgba(44,255,223,0.35); }
+    .sp-card.done:hover { border-color: var(--cyan); }
+
+    .sp-photo {
+      width: 100%; aspect-ratio: 3 / 4; object-fit: cover;
+      display: block;
+    }
+    .sp-body { padding: 12px 12px 14px; display: flex; flex-direction: column; flex: 1; }
+    .sp-talk { font-size: 11px; color: var(--muted); font-weight: 600; line-height: 1.4; margin-bottom: 5px; }
+    .sp-name { font-size: 13px; font-weight: 800; color: var(--white); margin-bottom: 3px; line-height: 1.2; }
+    .sp-role { font-size: 10px; color: var(--muted); margin-bottom: 12px; line-height: 1.3; flex: 1; }
+
+    .sp-btn {
+      width: 100%; padding: 9px 10px;
+      border-radius: 10px; border: none;
+      font-family: 'Assistant', sans-serif;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .sp-btn-new {
+      background: linear-gradient(135deg, var(--purple), #7b1598);
+      color: var(--white);
+      box-shadow: 0 3px 14px rgba(152,31,182,0.3);
+    }
+    .sp-btn-new:hover { opacity: 0.88; transform: translateY(-1px); }
+    .sp-btn-done {
+      background: rgba(44,255,223,0.1);
+      color: var(--cyan);
+      border: 1px solid rgba(44,255,223,0.3);
+    }
+    .sp-btn-done:hover { background: rgba(44,255,223,0.18); }
+
+    /* ─── Form view ─── */
+    .form-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: none;
+      color: var(--muted); font-family: 'Assistant', sans-serif;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      padding: 8px 0; transition: color 0.15s;
+      margin-bottom: 24px;
+    }
+    .form-back:hover { color: var(--white); }
+
+    .form-outer { max-width: 920px; margin: 0 auto; padding: 36px 20px 60px; }
+
+    .speaker-detail {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+    @media (max-width: 680px) {
+      .speaker-detail { grid-template-columns: 1fr; gap: 20px; }
+      .detail-photo-wrap { max-width: 220px; margin: 0 auto; }
+    }
+
+    .detail-photo {
+      width: 100%; aspect-ratio: 3 / 4; object-fit: cover;
+      border-radius: 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+
+    .detail-info {}
+    .detail-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--cyan); margin-bottom: 8px; }
+    .detail-talk { font-size: clamp(18px, 3vw, 26px); font-weight: 800; line-height: 1.2; margin-bottom: 8px; }
+    .detail-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .detail-role { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 0 0 24px; }
+
+    /* Form fields */
+    .form-section { margin-bottom: 24px; }
+    .form-label {
+      font-size: 15px; font-weight: 700; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .form-dot { width: 5px; height: 5px; background: var(--cyan); border-radius: 50%; flex-shrink: 0; }
+
+    /* Star rating */
+    .star-row { display: inline-flex; flex-direction: row-reverse; gap: 4px; }
+    .star-row .star {
+      font-size: 30px; color: rgba(255,255,255,0.15);
+      cursor: pointer; background: none; border: none;
+      padding: 2px; line-height: 1; transition: color 0.1s, transform 0.1s;
+    }
+    .star-row .star.hover, .star-row .star.active { color: var(--gold); }
+    .star-row .star:hover { transform: scale(1.15); }
+
+    /* Textarea */
+    .feedback-textarea {
+      width: 100%; background: rgba(255,255,255,0.05);
+      border: 1.5px solid var(--border); border-radius: 12px;
+      padding: 14px 16px; color: var(--white);
+      font-family: 'Assistant', sans-serif; font-size: 15px;
+      resize: vertical; min-height: 100px; outline: none;
+      transition: border-color 0.18s; line-height: 1.65;
+    }
+    .feedback-textarea::placeholder { color: var(--muted); }
+    .feedback-textarea:focus { border-color: rgba(152,31,182,0.7); }
+
+    /* Char count */
+    .char-count { text-align: left; font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    /* Submit button */
+    .form-actions { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
+    .btn-save {
+      padding: 14px 32px; border-radius: 12px; border: none;
+      font-family: 'Assistant', sans-serif; font-size: 15px; font-weight: 700;
+      background: linear-gradient(135deg, var(--purple), #7b1598);
+      color: var(--white); cursor: pointer;
+      box-shadow: 0 4px 20px rgba(152,31,182,0.35);
+      transition: all 0.2s;
+    }
+    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(152,31,182,0.5); }
+    .btn-save:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-cancel {
+      padding: 14px 24px; border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--card); color: var(--muted);
+      font-family: 'Assistant', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-cancel:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
+
+    /* Saved notice */
+    .saved-notice {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(44,255,223,0.08); border: 1px solid rgba(44,255,223,0.25);
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 13px; font-weight: 700; color: var(--cyan);
+      margin-bottom: 20px;
+    }
+    .saved-notice.visible { display: flex; }
+
+    /* Error */
+    .form-err {
+      display: none; font-size: 13px; color: #ff8fa0; margin-top: 10px;
+      padding: 10px 14px; background: rgba(255,100,120,0.08);
+      border: 1px solid rgba(255,100,120,0.22); border-radius: 8px; font-weight: 600;
+    }
+    .form-err.on { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="bg-shapes" aria-hidden="true">
+  <div class="bg-shape-1"></div>
+  <div class="bg-shape-2"></div>
+  <div class="bg-sparkle"></div>
+</div>
+
+<!-- ══════════════════ GRID VIEW ══════════════════ -->
+<div id="gridView">
+  <div class="page-header">
+    <img src="/logo.svg" alt="Design AI" class="logo">
+    <div class="page-tag">חזרה גנרלית</div>
+    <h1 class="page-title">פידבק על <span class="accent">ההרצאות</span></h1>
+    <p class="page-desc">בחרו מרצה ומלאו פידבק על ההרצאה שלו/ה</p>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="progress-banner">
+      <span class="pulse"></span>
+      <span id="progressText">0 מתוך 12 הרצאות קיבלו פידבק</span>
+    </div>
+    <div class="speaker-grid" id="speakerGrid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════ FORM VIEW ══════════════════ -->
+<div id="formView">
+  <div class="form-outer">
+    <button class="form-back" onclick="showGrid()">→ חזרה לכל המרצים</button>
+
+    <div class="saved-notice" id="savedNotice">
+      ✓ הפידבק נשמר בהצלחה — ניתן לערוך ולשמור שוב
+    </div>
+
+    <div class="speaker-detail">
+      <!-- Photo -->
+      <div class="detail-photo-wrap">
+        <img class="detail-photo" id="detailPhoto" src="" alt="">
+      </div>
+
+      <!-- Info + Form -->
+      <div class="detail-info">
+        <div class="detail-tag">Design AI 7.0 · חזרה גנרלית</div>
+        <div class="detail-talk" id="detailTalk"></div>
+        <div class="detail-name" id="detailName"></div>
+        <div class="detail-role" id="detailRole"></div>
+        <div class="divider"></div>
+
+        <!-- Overall rating -->
+        <div class="form-section">
+          <div class="form-label"><span class="form-dot"></span>דירוג כללי של ההרצאה</div>
+          <div class="star-row" id="overallStars">
+            <button class="star" data-value="5">★</button>
+            <button class="star" data-value="4">★</button>
+            <button class="star" data-value="3">★</button>
+            <button class="star" data-value="2">★</button>
+            <button class="star" data-value="1">★</button>
+          </div>
+        </div>
+
+        <!-- What I liked -->
+        <div class="form-section">
+          <div class="form-label"><span class="form-dot"></span>מה אהבתי בהרצאה?</div>
+          <textarea class="feedback-textarea" id="fieldLiked"
+            placeholder="מה עבד טוב? מה היה ברור, מעניין, או מרתק?"
+            maxlength="1000" oninput="countChars('fieldLiked','likedCount')"></textarea>
+          <div class="char-count"><span id="likedCount">0</span>/1000</div>
+        </div>
+
+        <!-- What to improve -->
+        <div class="form-section">
+          <div class="form-label"><span class="form-dot"></span>מה הייתי משפר?</div>
+          <textarea class="feedback-textarea" id="fieldImprove"
+            placeholder="הצעות לשיפור: קצב, מבנה, שקפים, תוכן, זמן..."
+            maxlength="1000" oninput="countChars('fieldImprove','improveCount')"></textarea>
+          <div class="char-count"><span id="improveCount">0</span>/1000</div>
+        </div>
+
+        <div class="form-err" id="formErr">יש לתת דירוג כוכבים לפני השמירה</div>
+
+        <div class="form-actions">
+          <button class="btn-save" id="btnSave" onclick="saveFeedback()">שמור פידבק ✓</button>
+          <button class="btn-cancel" onclick="showGrid()">ביטול</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Speakers data ──────────────────────────────────
+  const SPEAKERS = [
+    { name: 'דניאל בוארון',         role: 'Design AI Founder',                        talk: 'דברי פתיחה — DESIGN TO CODE',                        img: 'https://designai.co.il/wp-content/uploads/2025/12/danielb.png' },
+    { name: 'גל דולב',              role: 'Product Manager & AI Thought Leader',        talk: 'עקרונות קריטים לעיצוב חוויות מעולות ליוזר עם AI', img: 'https://designai.co.il/wp-content/uploads/2025/12/Frame-2147255694.png' },
+    { name: 'חן האנה ויצמן',        role: 'Staff Product Designer, Stealth Start-Up',  talk: 'איך Cursor שינה את ה-day to day של מעצבים',          img: 'https://designai.co.il/wp-content/uploads/2025/12/חן-ויצמן.png' },
+    { name: 'ד"ר יעקב גרינשפן',    role: 'UX Strategy',                                talk: 'אהבה, אמון, AI: בניית אפליקציות AI מובטחות',         img: 'https://designai.co.il/wp-content/uploads/2025/12/יעקב-גרינשפן.png' },
+    { name: 'רון ברנוב',            role: 'Creative Workflow Advocate, Weavy',          talk: 'Workflow First: תהליך יצירתי עם AI ו-Weavy',          img: 'https://designai.co.il/wp-content/uploads/2025/12/רון-ברנוב.png' },
+    { name: 'שחר קגן',              role: 'Freelance UX/UI/PM',                         talk: 'שכבת ה-UX החסרה במוצרי AI',                          img: 'https://designai.co.il/wp-content/uploads/2025/12/שחר-קגן.png' },
+    { name: 'עידו זייפמן וקרן שגב', role: 'Co-Founder & Co-CEO, Kido',                 talk: 'סוף כל סוף העבודה הידנית ב-Design System',           img: 'https://designai.co.il/wp-content/uploads/2025/12/Frame-2147255712.png' },
+    { name: 'ענבל ברקוביץ',         role: 'Head of UX, Ocean',                          talk: 'עיצוב בעידן ה-GenUI',                                 img: 'https://designai.co.il/wp-content/uploads/2026/01/ענבל-ברקוביץ.png' },
+    { name: 'טל זגורי',             role: 'מנהל מוצר ו-AI Storyteller',                 talk: 'סטוריטלינג בעולם החדש: איך למכור את הרעיונות שלכם ב-2 דקות?',               img: 'https://designai.co.il/wp-content/uploads/2025/12/Frame-2147255703.png' },
+    { name: 'שירה וינברג הראל',     role: 'Product and AI Expert, Beyond AI',           talk: 'מנטור לכל עובד.ת: "נבחרת מנטורים" בעזרת AI',         img: 'https://designai.co.il/wp-content/uploads/2025/12/שירהוינברגהראל.png' },
+    { name: 'שלי אור גיסר',         role: 'Gen AI Design Lead, GITAM BBDO',             talk: 'Creative Engineering — הנדסת חשיבה עיצובית',         img: 'https://designai.co.il/wp-content/uploads/2025/12/שלי-אור-גיסר.png' },
+  ];
+
+  // ── State ─────────────────────────────────────────
+  let sessionId = localStorage.getItem('rehearsal_session');
+  if (!sessionId) {
+    sessionId = 'r_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem('rehearsal_session', sessionId);
+  }
+
+  function getSaved(i) {
+    try { return JSON.parse(localStorage.getItem(`rf_${i}`) || 'null'); } catch { return null; }
+  }
+  function setSaved(i, data) { localStorage.setItem(`rf_${i}`, JSON.stringify(data)); }
+
+  let activeIdx = null;
+  let activeRating = 0;
+
+  // ── Build grid ────────────────────────────────────
+  function buildGrid() {
+    const savedCount = SPEAKERS.filter((_, i) => getSaved(i)).length;
+    document.getElementById('progressText').textContent =
+      `${savedCount} מתוך ${SPEAKERS.length} מרצים קיבלו פידבק`;
+
+    document.getElementById('speakerGrid').innerHTML = SPEAKERS.map((s, i) => {
+      const saved = getSaved(i);
+      const isDone = !!saved;
+      return `
+        <div class="sp-card${isDone ? ' done' : ''}" id="card-${i}">
+          <img class="sp-photo" src="${esc(s.img)}" alt="${esc(s.name)}" loading="lazy"
+               onerror="this.src='/speakers/${esc(imgFallback(s.name))}.png'">
+          <div class="sp-body">
+            <div class="sp-talk">${esc(s.talk)}</div>
+            <div class="sp-name">${esc(s.name)}</div>
+            <div class="sp-role">${esc(s.role)}</div>
+            <button class="sp-btn ${isDone ? 'sp-btn-done' : 'sp-btn-new'}"
+                    onclick="openForm(${i})">
+              ${isDone ? '✓ ערוך פידבק' : 'כתוב פידבק →'}
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Open form ─────────────────────────────────────
+  function openForm(i) {
+    activeIdx = i;
+    activeRating = 0;
+    const s = SPEAKERS[i];
+    const saved = getSaved(i);
+
+    document.getElementById('detailPhoto').src = s.img;
+    document.getElementById('detailPhoto').onerror = function() {
+      this.src = '/speakers/' + imgFallback(s.name) + '.png';
+    };
+    document.getElementById('detailTalk').textContent = s.talk;
+    document.getElementById('detailName').textContent = s.name;
+    document.getElementById('detailRole').textContent = s.role;
+
+    // Pre-fill if editing
+    document.getElementById('fieldLiked').value   = saved?.liked   || '';
+    document.getElementById('fieldImprove').value = saved?.improve || '';
+    countChars('fieldLiked','likedCount');
+    countChars('fieldImprove','improveCount');
+
+    activeRating = saved?.rating || 0;
+    dispStars(activeRating);
+
+    const notice = document.getElementById('savedNotice');
+    notice.classList.toggle('visible', !!saved);
+
+    document.getElementById('formErr').classList.remove('on');
+    document.getElementById('btnSave').disabled = false;
+    document.getElementById('btnSave').textContent = saved ? 'עדכן פידבק ✓' : 'שמור פידבק ✓';
+
+    // Transition
+    document.getElementById('gridView').style.display = 'none';
+    const fv = document.getElementById('formView');
+    fv.style.display = 'block';
+    fv.style.opacity = '0';
+    fv.style.transform = 'translateX(-24px)';
+    requestAnimationFrame(() => {
+      fv.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+      fv.style.opacity = '1';
+      fv.style.transform = 'translateX(0)';
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── Show grid ─────────────────────────────────────
+  function showGrid() {
+    const fv = document.getElementById('formView');
+    fv.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    fv.style.opacity = '0';
+    fv.style.transform = 'translateX(24px)';
+    setTimeout(() => {
+      fv.style.display = 'none';
+      fv.style.cssText = '';
+      document.getElementById('gridView').style.display = 'block';
+      buildGrid();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 200);
+  }
+
+  // ── Save feedback ─────────────────────────────────
+  async function saveFeedback() {
+    if (!activeRating) {
+      document.getElementById('formErr').classList.add('on');
+      return;
+    }
+    document.getElementById('formErr').classList.remove('on');
+    const btn = document.getElementById('btnSave');
+    btn.disabled = true;
+    btn.textContent = 'שומר...';
+
+    const data = {
+      sessionId,
+      speakerName: SPEAKERS[activeIdx].name,
+      speakerTalk: SPEAKERS[activeIdx].talk,
+      speakerRole: SPEAKERS[activeIdx].role,
+      rating: activeRating,
+      liked:   document.getElementById('fieldLiked').value.trim(),
+      improve: document.getElementById('fieldImprove').value.trim(),
+    };
+
+    // Save locally first
+    setSaved(activeIdx, data);
+
+    // Send to server
+    try {
+      await fetch('/api/rehearsal/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch { /* offline — localStorage is source of truth */ }
+
+    btn.disabled = false;
+    showGrid();
+  }
+
+  // ── Stars ─────────────────────────────────────────
+  function dispStars(v) {
+    document.querySelectorAll('#overallStars .star').forEach(s => {
+      s.classList.toggle('active', parseInt(s.dataset.value) <= v);
+      s.classList.remove('hover');
+    });
+  }
+
+  document.querySelectorAll('#overallStars .star').forEach(star => {
+    const v = parseInt(star.dataset.value);
+    star.addEventListener('click', () => { activeRating = v; dispStars(v); });
+    star.addEventListener('mouseenter', () => {
+      document.querySelectorAll('#overallStars .star').forEach(s =>
+        s.classList.toggle('hover', parseInt(s.dataset.value) <= v));
+    });
+    star.addEventListener('mouseleave', () => dispStars(activeRating));
+  });
+
+  // ── Utils ─────────────────────────────────────────
+  function esc(s) {
+    return String(s || '').replace(/[&<>"']/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function countChars(fieldId, countId) {
+    document.getElementById(countId).textContent =
+      document.getElementById(fieldId).value.length;
+  }
+  const NAME_MAP = {
+    'דניאל בוארון':'daniel','עומרי הרמן':'omri','גל דולב':'gal',
+    'חן האנה ויצמן':'chen','ד"ר יעקב גרינשפן':'yaakov','רון ברנוב':'ron',
+    'שחר קגן':'shachar','עידו זייפמן וקרן שגב':'ido-keren','ענבל ברקוביץ':'inbal',
+    'טל זגורי':'tal','שירה וינברג הראל':'shira','שלי אור גיסר':'sheli',
+  };
+  function imgFallback(name) { return NAME_MAP[name] || 'speaker'; }
+
+  // ── Init ─────────────────────────────────────────
+  buildGrid();
+</script>
+</body>
+</html>
