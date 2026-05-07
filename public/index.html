@@ -2,391 +2,509 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>סקר משוב | Design AI 7.0</title>
   <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --navy:   #041042;
-      --navy2:  #0A1153;
-      --purple: #981fb6;
-      --cyan:   #2cffdf;
-      --white:  #ffffff;
-      --muted:  rgba(255,255,255,0.5);
-      --card:   rgba(255,255,255,0.07);
-      --border: rgba(255,255,255,0.1);
-      --gold:   #f5c842;
+      --navy:    #041042;
+      --navy2:   #080f3a;
+      --purple:  #981fb6;
+      --purple2: #7b1598;
+      --cyan:    #2cffdf;
+      --white:   #ffffff;
+      --muted:   rgba(255,255,255,0.48);
+      --muted2:  rgba(255,255,255,0.22);
+      --card:    rgba(255,255,255,0.06);
+      --card2:   rgba(255,255,255,0.1);
+      --border:  rgba(255,255,255,0.1);
+      --border2: rgba(255,255,255,0.18);
+      --gold:    #f5c842;
+      --err:     #ff6b8a;
+      --r: 16px;
     }
 
-    html { scroll-behavior: smooth; }
-
+    html { scroll-behavior: smooth; height: 100%; }
     body {
       font-family: 'Assistant', sans-serif;
       background: var(--navy);
       color: var(--white);
-      min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
     }
 
-    /* ─── Goldstein-inspired background shapes ─── */
-    .bg-shapes {
-      position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      overflow: hidden;
+    /* ── Animated background ── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
+      background: radial-gradient(ellipse at 20% 80%, #08093a 0%, var(--navy) 60%);
     }
-    .bg-shape-1 {
-      position: absolute;
-      width: 340px; height: 680px;
-      background: rgba(152,31,182,0.18);
-      border-radius: 340px 0 0 340px;
-      top: -80px; right: -60px;
+    .blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(60px); opacity: 0.55;
+      animation: drift 12s ease-in-out infinite alternate;
     }
-    .bg-shape-2 {
-      position: absolute;
-      width: 260px; height: 260px;
-      background: rgba(44,255,223,0.08);
-      border-radius: 50%;
-      bottom: 60px; left: -80px;
+    .blob-1 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(152,31,182,0.6), transparent 70%);
+      top: -120px; right: -100px; animation-duration: 14s;
     }
-    .bg-sparkle {
-      position: absolute;
-      width: 36px; height: 36px;
-      top: 200px; right: 80px;
+    .blob-2 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(44,255,223,0.35), transparent 70%);
+      bottom: -60px; left: -80px; animation-duration: 10s; animation-delay: -4s;
     }
-    .bg-sparkle::before, .bg-sparkle::after {
-      content: ''; position: absolute;
-      background: rgba(44,255,223,0.3);
+    .blob-3 {
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(152,31,182,0.3), transparent 70%);
+      top: 40%; left: 30%; animation-duration: 16s; animation-delay: -8s;
     }
-    .bg-sparkle::before { width: 5px; height: 36px; left: 15px; top: 0; }
-    .bg-sparkle::after  { width: 36px; height: 5px; top: 15px; left: 0; }
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to   { transform: translate(30px,20px) scale(1.08); }
+    }
+    .grid-overlay {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
 
-    /* ─── Progress ─── */
+    /* ── Progress ── */
     .progress-bar {
       position: fixed; top: 0; left: 0; right: 0;
-      height: 3px; background: rgba(255,255,255,0.08); z-index: 100;
+      height: 3px; z-index: 200;
+      background: rgba(255,255,255,0.06);
     }
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--purple), var(--cyan));
-      width: 0%; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+      width: 0%; transition: width 0.5s cubic-bezier(.4,0,.2,1);
     }
-    .step-indicator {
-      position: fixed; top: 14px; left: 20px;
-      font-size: 11px; font-weight: 600; letter-spacing: 0.12em;
-      color: var(--muted); z-index: 100;
+    .step-pill {
+      position: fixed; top: 14px; left: 16px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 5px 12px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.55); z-index: 200;
+      backdrop-filter: blur(8px);
+      transition: opacity 0.3s;
     }
 
-    /* ─── Layout ─── */
-    .survey-wrapper { position: relative; overflow: hidden; min-height: 100vh; }
+    /* ── Wrapper & sections ── */
+    .survey-wrapper { position: relative; z-index: 1; }
     .section {
       display: none; flex-direction: column;
       align-items: center; justify-content: center;
-      min-height: 100vh; padding: 72px 20px 52px;
+      min-height: 100dvh; padding: 80px 16px 48px;
       position: absolute; top: 0; left: 0; right: 0; opacity: 0;
     }
     .section.active { display: flex; position: relative; opacity: 1; }
-    .section-inner { width: 100%; max-width: 640px; position: relative; z-index: 1; }
+    .section-card {
+      width: 100%; max-width: 600px;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 24px; padding: 32px 28px 28px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      position: relative; z-index: 1;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    }
+    @media (max-width: 480px) {
+      .section-card { padding: 24px 18px 22px; border-radius: 20px; }
+      .section { padding: 72px 12px 40px; }
+    }
 
-    /* ─── Logo ─── */
-    .logo-wrap { display: flex; justify-content: center; margin-bottom: 32px; }
-    .logo { width: 120px; filter: brightness(0) invert(1); }
+    /* ── Logo ── */
+    .logo-wrap { display: flex; justify-content: center; margin-bottom: 28px; }
+    .logo { width: 110px; filter: brightness(0) invert(1); }
 
-    /* ─── Type ─── */
+    /* ── Brand badge ── */
+    .brand-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(152,31,182,0.12);
+      border: 1px solid rgba(152,31,182,0.35);
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: rgba(255,255,255,0.7);
+      margin-bottom: 20px;
+    }
+    .brand-dot {
+      width: 6px; height: 6px; background: var(--purple);
+      border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+
+    /* ── Typography ── */
     .tag {
-      display: inline-block; font-size: 11px; font-weight: 700;
-      letter-spacing: 0.18em; text-transform: uppercase;
-      color: var(--cyan); margin-bottom: 10px;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--cyan); margin-bottom: 10px;
     }
+    .tag::before { content:''; width:16px; height:2px; background:var(--cyan); border-radius:2px; display:inline-block; }
     h1 {
-      font-size: clamp(34px, 6vw, 52px); font-weight: 800;
-      line-height: 1.1; letter-spacing: -0.025em; margin-bottom: 14px;
+      font-size: clamp(36px,7vw,54px); font-weight: 800;
+      line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 14px;
     }
-    h1 .accent {
-      background: linear-gradient(135deg, var(--cyan), #9b51e0);
+    h1 .gr {
+      background: linear-gradient(135deg, var(--cyan) 0%, #b06bef 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     h2 {
-      font-size: clamp(22px, 4vw, 32px); font-weight: 800;
-      letter-spacing: -0.02em; margin-bottom: 6px;
+      font-size: clamp(22px,4.5vw,30px); font-weight: 800;
+      letter-spacing: -0.025em; margin-bottom: 6px; line-height: 1.2;
     }
-    .desc { font-size: 15px; color: var(--muted); margin-bottom: 32px; line-height: 1.7; }
-
-    /* ─── Question ─── */
-    .question { margin-bottom: 26px; }
+    .desc {
+      font-size: 15px; color: var(--muted); margin-bottom: 28px;
+      line-height: 1.7;
+    }
     .q-label {
       font-size: 15px; font-weight: 700; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
-    .dot { width: 5px; height: 5px; background: var(--cyan); border-radius: 50%; flex-shrink: 0; }
+    .q-dot { width: 5px; height: 5px; background: var(--cyan); border-radius: 50%; flex-shrink: 0; }
+    .q-optional { font-weight: 400; font-size: 12px; color: var(--muted); }
+    .question { margin-bottom: 24px; }
 
-    /* ─── Options (Goldstein filter-btn style adapted) ─── */
+    /* ── Option cards ── */
     .options { display: flex; flex-direction: column; gap: 8px; }
     .opt {
-      padding: 14px 18px;
-      background: var(--card); border: 1.5px solid var(--border);
-      border-radius: 12px; cursor: pointer;
+      padding: 14px 16px; cursor: pointer; user-select: none;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px; transition: all 0.18s;
+      display: flex; align-items: center; gap: 12px;
       font-size: 15px; font-weight: 600; color: var(--white);
-      transition: border-color 0.18s, background 0.18s;
-      user-select: none; display: flex; align-items: center; gap: 12px;
+      position: relative; overflow: hidden;
     }
-    .opt:hover { border-color: rgba(152,31,182,0.6); background: rgba(152,31,182,0.08); }
-    .opt.selected { border-color: var(--purple); background: rgba(152,31,182,0.18); }
-    .opt.selected .opt-dot { border-color: var(--cyan); background: var(--cyan); }
+    .opt::after {
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(90deg, rgba(152,31,182,0) 0%, rgba(152,31,182,0.08) 100%);
+      opacity:0; transition: opacity 0.2s;
+    }
+    .opt:hover { border-color: rgba(152,31,182,0.5); background: rgba(152,31,182,0.06); }
+    .opt:hover::after { opacity: 1; }
+    .opt.selected { border-color: var(--purple); background: rgba(152,31,182,0.14); }
+    .opt.selected::after { opacity: 1; }
+    .opt.selected .opt-check { background: var(--purple); border-color: var(--purple); }
+    .opt.selected .opt-check::after { opacity: 1; }
+    .opt.checkbox-opt.selected { border-color: var(--cyan); background: rgba(44,255,223,0.1); }
+    .opt.checkbox-opt.selected .opt-check { background: var(--cyan); border-color: var(--cyan); }
     .opt input { display: none; }
-    .opt-dot {
-      width: 18px; height: 18px; border-radius: 50%;
+    .opt-check {
+      width: 20px; height: 20px; border-radius: 50%;
       border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;
-      transition: all 0.15s;
+      transition: all 0.18s; position: relative;
     }
+    .opt-check::after {
+      content:'✓'; position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; color:#fff; opacity:0; transition:opacity 0.15s;
+    }
+    .checkbox-opt .opt-check { border-radius: 6px; }
+    .opt-emoji { font-size: 18px; flex-shrink: 0; }
 
-    /* ─── Speaker grid (large portrait cards) ─── */
-    .speaker-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+    /* ── Anon badge (welcome) ── */
+    .anon-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(44,255,223,0.06);
+      border: 1px solid rgba(44,255,223,0.2);
+      border-radius: 10px; padding: 10px 16px;
+      font-size: 13px; color: var(--cyan); font-weight: 600;
     }
-    @media (max-width: 560px) { .speaker-grid { grid-template-columns: repeat(2, 1fr); } }
+    .anon-dot { width: 7px; height: 7px; background: var(--cyan); border-radius: 50%; animation: pulse 2s infinite; }
 
-    /* Chip card (section 4 – favorites) */
-    .sp-chip { cursor: pointer; user-select: none; }
-    .sp-chip input { display: none; }
-    .sp-chip-inner {
-      background: var(--navy2); border: 1.5px solid var(--border);
-      border-radius: 14px; overflow: hidden; transition: all 0.22s;
-    }
-    .sp-chip-inner:hover { transform: translateY(-3px); border-color: rgba(152,31,182,0.55); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-    .sp-chip.selected .sp-chip-inner {
-      border-color: var(--cyan); box-shadow: 0 0 18px rgba(44,255,223,0.2);
-    }
-    .sp-avatar {
-      width: 100%; aspect-ratio: 3 / 4; object-fit: cover;
-      display: block;
-    }
-    .sp-info { padding: 9px 10px 11px; text-align: right; }
-    .sp-name { font-size: 12px; font-weight: 700; line-height: 1.3; color: var(--white); }
-    .sp-role { font-size: 10px; color: var(--muted); margin-top: 3px; line-height: 1.35; }
-
-    /* Rating card (section 5 – same portrait style + stars) */
-    .rating-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-    @media (max-width: 560px) { .rating-grid { grid-template-columns: repeat(2, 1fr); } }
-
-    .rating-card {
-      background: var(--navy2); border: 1.5px solid var(--border);
-      border-radius: 14px; overflow: hidden; transition: border-color 0.2s;
-    }
-    .rating-card.rated { border-color: rgba(245,200,66,0.5); }
-    .rating-card .sp-info { padding: 8px 10px 6px; }
-    .rating-card .sp-name { font-size: 11px; margin-bottom: 0; }
-    .rating-card .star-row {
-      display: flex; justify-content: center; gap: 1px; flex-direction: row-reverse;
-      padding: 4px 6px 2px;
-    }
-    .rating-card .star {
-      font-size: 16px; color: rgba(255,255,255,0.15);
-      cursor: pointer; background: none; border: none;
-      padding: 2px; line-height: 1; transition: color 0.12s, transform 0.1s;
-    }
-    .rating-card .star.hover, .rating-card .star.active { color: var(--gold); }
-    .rating-card .star:hover { transform: scale(1.2); }
-    .rating-card .skip {
-      font-size: 10px; color: var(--muted);
-      background: none; border: none;
-      cursor: pointer; margin: 4px 0 8px;
-      font-family: 'Assistant', sans-serif;
-      display: block; width: 100%; text-align: center;
-      text-decoration: underline; transition: color 0.15s;
-    }
-    .rating-card .skip:hover { color: var(--white); }
-    .rating-card .skip.active { color: rgba(44,255,223,0.6); text-decoration: none; }
-
-    /* ─── Logistics (star rows) ─── */
+    /* ── Star ratings (logistics) ── */
     .logistics-block {
-      background: var(--card); border: 1.5px solid var(--border);
-      border-radius: 16px; padding: 4px 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 2px 20px;
     }
     .log-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.06); gap: 16px;
+      padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.06); gap: 12px;
     }
     .log-row:last-child { border-bottom: none; }
     .log-label { font-size: 14px; font-weight: 700; }
     .star-rating {
-      display: inline-flex; flex-direction: row-reverse; gap: 2px;
+      display: inline-flex; flex-direction: row-reverse; gap: 4px;
     }
     .star-rating .star {
-      font-size: 26px; color: rgba(255,255,255,0.15);
+      font-size: 28px; color: rgba(255,255,255,0.13);
       cursor: pointer; background: none; border: none;
-      padding: 2px; line-height: 1; transition: color 0.12s, transform 0.12s;
+      padding: 4px; line-height: 1; transition: color 0.12s, transform 0.15s;
+      touch-action: manipulation;
     }
     .star-rating .star.hover, .star-rating .star.active { color: var(--gold); }
-    .star-rating .star:hover { transform: scale(1.12); }
+    .star-rating .star:hover { transform: scale(1.2); }
+    @media (max-width: 480px) {
+      .star-rating .star { font-size: 26px; padding: 3px; }
+    }
 
-    /* ─── Textarea ─── */
+    /* ── Big overview star (welcome section) ── */
+    .big-stars .star { font-size: 38px !important; padding: 6px !important; }
+    @media (max-width: 480px) { .big-stars .star { font-size: 34px !important; } }
+    .star-center { display: flex; justify-content: center; padding: 10px 0; }
+
+    /* ── Speaker grid (favorites) ── */
+    .speaker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 540px) { .speaker-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } }
+    @media (max-width: 380px) { .speaker-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .sp-chip { cursor: pointer; user-select: none; }
+    .sp-chip input { display: none; }
+    .sp-chip-inner {
+      background: rgba(8,9,58,0.7);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px; overflow: hidden;
+      transition: all 0.22s; position: relative;
+    }
+    .sp-chip-inner:hover { transform: translateY(-4px); border-color: rgba(152,31,182,0.5); box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
+    .sp-chip.selected .sp-chip-inner {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px rgba(44,255,223,0.2), 0 8px 24px rgba(44,255,223,0.1);
+      transform: translateY(-4px);
+    }
+    .sp-chip-check {
+      position: absolute; top: 6px; left: 6px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--cyan); display: flex; align-items: center; justify-content: center;
+      font-size: 12px; color: #041042; font-weight: 800;
+      opacity: 0; transform: scale(0);
+      transition: all 0.2s cubic-bezier(.175,.885,.32,1.275);
+      z-index: 2;
+    }
+    .sp-chip.selected .sp-chip-check { opacity: 1; transform: scale(1); }
+    .sp-avatar {
+      width: 100%; height: 150px; object-fit: cover; object-position: top; display: block;
+    }
+    .sp-info { padding: 8px 8px 10px; min-height: 50px; }
+    .sp-name { font-size: 11px; font-weight: 700; line-height: 1.3; color: var(--white); display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .sp-role { font-size: 9.5px; color: var(--muted); margin-top: 2px; line-height: 1.3; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+
+    /* ── Rating grid ── */
+    .rating-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 540px) { .rating-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; } }
+    @media (max-width: 380px) { .rating-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .rating-card {
+      background: rgba(8,9,58,0.7);
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 14px; overflow: hidden; transition: border-color 0.2s;
+    }
+    .rating-card.rated { border-color: rgba(245,200,66,0.45); }
+    .rating-card .sp-info { padding: 7px 8px 5px; min-height: 44px; }
+    .rating-card .sp-name { font-size: 10px; display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .rc-stars {
+      display: flex; justify-content: center; gap: 0; flex-direction: row-reverse;
+      padding: 2px 4px;
+    }
+    .rc-stars .star {
+      font-size: 15px; color: rgba(255,255,255,0.13);
+      cursor: pointer; background: none; border: none;
+      padding: 3px 2px; line-height: 1; transition: color 0.1s, transform 0.12s;
+      touch-action: manipulation;
+    }
+    .rc-stars .star.hover, .rc-stars .star.active { color: var(--gold); }
+    .rc-skip {
+      font-size: 9px; color: var(--muted);
+      background: none; border: none; cursor: pointer;
+      font-family: 'Assistant', sans-serif;
+      display: block; width: 100%; text-align: center;
+      text-decoration: underline; padding: 3px 0 8px;
+      transition: color 0.15s;
+    }
+    .rc-skip:hover { color: var(--white); }
+    .rc-skip.skipped { color: rgba(44,255,223,0.6); text-decoration: none; }
+
+    /* ── Textarea ── */
     .feedback-textarea {
-      width: 100%; background: var(--card);
-      border: 1.5px solid var(--border); border-radius: 12px;
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid var(--border); border-radius: 14px;
       padding: 14px 16px; color: var(--white);
       font-family: 'Assistant', sans-serif; font-size: 15px;
-      resize: vertical; min-height: 120px; outline: none;
-      transition: border-color 0.18s; line-height: 1.65;
+      resize: vertical; min-height: 110px; outline: none;
+      transition: border-color 0.18s; line-height: 1.7;
     }
     .feedback-textarea::placeholder { color: var(--muted); }
-    .feedback-textarea:focus { border-color: var(--purple); }
+    .feedback-textarea:focus { border-color: rgba(152,31,182,0.7); }
 
-    /* ─── Error ─── */
+    /* ── Divider ── */
+    .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 20px 0; }
+
+    /* ── Buttons ── */
+    .btn-group { display: flex; gap: 10px; margin-top: 24px; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 13px 24px; border-radius: 12px;
+      font-family: 'Assistant', sans-serif; font-size: 15px;
+      font-weight: 700; cursor: pointer; border: none;
+      transition: all 0.2s; letter-spacing: -0.01em; touch-action: manipulation;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--purple) 0%, var(--purple2) 100%);
+      color: var(--white); flex: 1;
+      box-shadow: 0 4px 20px rgba(152,31,182,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(152,31,182,0.55); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-ghost {
+      background: rgba(255,255,255,0.06); color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--border2); color: var(--white); }
+    .btn-xl {
+      padding: 17px 36px; font-size: 17px; border-radius: 14px;
+      width: 100%; justify-content: center;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Error ── */
     .err {
-      display: none; font-size: 13px; color: #ff8fa0;
+      display: none; font-size: 13px; color: var(--err);
       margin-top: 10px; padding: 10px 14px;
-      background: rgba(255,100,120,0.1);
-      border: 1px solid rgba(255,100,120,0.25);
-      border-radius: 8px; font-weight: 600;
+      background: rgba(255,100,130,0.08);
+      border: 1px solid rgba(255,100,130,0.2);
+      border-radius: 10px; font-weight: 600;
     }
     .err.on { display: block; }
 
-    /* ─── Divider ─── */
-    .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0; }
-
-    /* ─── Buttons (Goldstein-inspired) ─── */
-    .btn-group { display: flex; gap: 10px; margin-top: 28px; align-items: center; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 13px 26px; border-radius: 12px;
-      font-family: 'Assistant', sans-serif; font-size: 15px;
-      font-weight: 700; cursor: pointer; border: none;
-      transition: all 0.2s; letter-spacing: -0.01em;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--purple), #7b1598);
-      color: var(--white);
-      box-shadow: 0 4px 20px rgba(152,31,182,0.35);
-    }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(152,31,182,0.5); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-ghost {
-      background: var(--card); color: var(--muted);
-      border: 1.5px solid var(--border);
-    }
-    .btn-ghost:hover { border-color: rgba(255,255,255,0.3); color: var(--white); }
-    .btn-lg { padding: 16px 36px; font-size: 17px; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    /* ─── Welcome badge ─── */
-    .anon-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(44,255,223,0.07);
-      border: 1px solid rgba(44,255,223,0.25);
-      border-radius: 8px; padding: 10px 16px;
-      font-size: 13px; color: var(--cyan); font-weight: 600; margin-bottom: 36px;
-    }
-    .pulse { width: 7px; height: 7px; background: var(--cyan); border-radius: 50%; animation: p 2s infinite; }
-    @keyframes p { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)} }
-
-    /* ─── Thank you ─── */
+    /* ── Thank you ── */
     .success-ring {
-      width: 72px; height: 72px;
+      width: 76px; height: 76px;
       background: linear-gradient(135deg, var(--purple), var(--cyan));
       border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 32px; margin: 0 auto 28px; color: white;
-      box-shadow: 0 0 48px rgba(44,255,223,0.35);
-      animation: pop .5s cubic-bezier(.175,.885,.32,1.275);
+      font-size: 34px; margin: 0 auto 24px; color: white;
+      box-shadow: 0 0 60px rgba(44,255,223,0.4), 0 0 120px rgba(152,31,182,0.25);
+      animation: pop .55s cubic-bezier(.175,.885,.32,1.275);
     }
     @keyframes pop { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
 
-    /* ─── Goldstein: data-animate ─── */
-    [data-animate] {
-      opacity: 0; transform: translateY(20px);
-      transition: opacity 0.55s ease, transform 0.55s ease;
+    /* ── Confetti ── */
+    .confetti-piece {
+      position: fixed; width: 8px; height: 8px;
+      top: -10px; border-radius: 2px;
+      animation: confettiFall linear forwards;
+      pointer-events: none; z-index: 9999;
     }
-    [data-animate].visible { opacity: 1; transform: translateY(0); }
+    @keyframes confettiFall {
+      0%   { transform: translateY(0) rotate(0deg); opacity:1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity:0; }
+    }
+
+    /* ── Animate-in ── */
+    [data-a] {
+      opacity: 0; transform: translateY(16px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+    [data-a].vis { opacity: 1; transform: translateY(0); }
+
+    /* ── Welcome specific ── */
+    .welcome-inner { text-align: center; }
+    .welcome-inner h1 { font-size: clamp(38px,8vw,58px); }
+    .char-counter { text-align: left; font-size: 11px; color: var(--muted); margin-top: 5px; }
   </style>
 </head>
 <body>
 
-<!-- Goldstein-inspired decorative shapes -->
-<div class="bg-shapes" aria-hidden="true">
-  <div class="bg-shape-1"></div>
-  <div class="bg-shape-2"></div>
-  <div class="bg-sparkle"></div>
+<!-- Animated background -->
+<div class="bg" aria-hidden="true">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="grid-overlay"></div>
 </div>
 
+<!-- Progress -->
 <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-<div class="step-indicator" id="stepIndicator"></div>
+<div class="step-pill" id="stepPill"></div>
 
 <div class="survey-wrapper">
 
-  <!-- 0: Welcome -->
+  <!-- ── 0: Welcome ── -->
   <div class="section active" id="section-0">
-    <div class="section-inner" style="text-align:center">
+    <div class="section-card welcome-inner">
       <div class="logo-wrap">
         <img src="/logo.svg" alt="Design AI" class="logo">
       </div>
-      <h1>ספרו לנו<br><span class="accent">מה חשבתם</span></h1>
-      <p class="desc" style="max-width:400px;margin:0 auto 20px">
-        השאלון קצר ואורך כ-3 דקות.<br>
-        תשובותיכם יעזרו לנו לבנות כנס עוד יותר טוב.
+      <div class="brand-badge" style="margin:0 auto 18px">
+        <span class="brand-dot"></span>
+        DESIGN AI 7.0 · 2026
+      </div>
+      <h1>ספרו לנו<br><span class="gr">מה חשבתם</span></h1>
+      <p class="desc" style="max-width:380px;margin:0 auto 24px;font-size:16px">
+        השאלון קצר, אורך כ-3 דקות בלבד.<br>המשוב שלכם עוזר לנו לבנות כנס עוד יותר טוב.
       </p>
-      <div class="anon-badge" style="margin:0 auto 40px">
-        <span class="pulse"></span>
+      <div class="anon-badge" style="margin:0 auto 32px">
+        <span class="anon-dot"></span>
         השאלון אנונימי לחלוטין
       </div>
-      <button class="btn btn-primary btn-lg" onclick="next()">בואו נתחיל ←</button>
+      <button class="btn btn-primary btn-xl" onclick="next()">
+        בואו נתחיל &nbsp;←
+      </button>
     </div>
   </div>
 
-  <!-- 1: General -->
+  <!-- ── 1: General ── -->
   <div class="section" id="section-1">
-    <div class="section-inner">
+    <div class="section-card">
       <span class="tag">חוויה כללית</span>
       <h2>כמה שאלות על הכנס</h2>
       <p class="desc">ספרו לנו על החוויה הכללית שלכם</p>
 
-      <div class="question" data-animate>
-        <div class="q-label"><span class="dot"></span>מה הדירוג הכללי שלכם לכנס?</div>
-        <div class="logistics-block">
-          <div class="log-row" style="justify-content:center;padding:18px 0">
-            <div class="star-rating" id="stars-overallRating">
-              <button class="star" data-value="5" style="font-size:34px">★</button>
-              <button class="star" data-value="4" style="font-size:34px">★</button>
-              <button class="star" data-value="3" style="font-size:34px">★</button>
-              <button class="star" data-value="2" style="font-size:34px">★</button>
-              <button class="star" data-value="1" style="font-size:34px">★</button>
-            </div>
+      <div class="question" data-a>
+        <div class="q-label"><span class="q-dot"></span>מה הדירוג הכללי שלכם לכנס?</div>
+        <div class="star-center">
+          <div class="star-rating big-stars" id="stars-overallRating">
+            <button class="star" data-value="5">★</button>
+            <button class="star" data-value="4">★</button>
+            <button class="star" data-value="3">★</button>
+            <button class="star" data-value="2">★</button>
+            <button class="star" data-value="1">★</button>
           </div>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.1s">
-        <div class="q-label"><span class="dot"></span>כמה זמן שהיתם בכנס?</div>
+      <div class="question" data-a style="transition-delay:.08s">
+        <div class="q-label"><span class="q-dot"></span>כמה זמן שהיתם בכנס?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="attendance" value="נשארתי כל היום"><span class="opt-dot"></span>נשארתי כל היום</label>
-          <label class="opt"><input type="radio" name="attendance" value="עזבתי באמצע עקב אילוצים"><span class="opt-dot"></span>עזבתי באמצע עקב אילוצים</label>
-          <label class="opt"><input type="radio" name="attendance" value="עזבתי באמצע עקב חוסר עניין"><span class="opt-dot"></span>עזבתי באמצע עקב חוסר עניין</label>
-          <label class="opt"><input type="radio" name="attendance" value="אחר"><span class="opt-dot"></span>אחר</label>
+          <label class="opt"><input type="radio" name="attendance" value="נשארתי כל היום"><span class="opt-check"></span><span class="opt-emoji">🌟</span>נשארתי כל היום</label>
+          <label class="opt"><input type="radio" name="attendance" value="עזבתי באמצע עקב אילוצים"><span class="opt-check"></span><span class="opt-emoji">⏰</span>עזבתי באמצע עקב אילוצים</label>
+          <label class="opt"><input type="radio" name="attendance" value="עזבתי באמצע עקב חוסר עניין"><span class="opt-check"></span><span class="opt-emoji">🚶</span>עזבתי באמצע עקב חוסר עניין</label>
+          <label class="opt"><input type="radio" name="attendance" value="אחר"><span class="opt-check"></span><span class="opt-emoji">💬</span>אחר</label>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.2s">
-        <div class="q-label"><span class="dot"></span>האם למדתם על כלי AI חדשים?</div>
+      <div class="question" data-a style="transition-delay:.16s">
+        <div class="q-label"><span class="q-dot"></span>האם למדתם על כלי AI חדשים?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="aiToolsLearned" value="למדתי על כלים רבים חדשים"><span class="opt-dot"></span>למדתי על כלים רבים חדשים</label>
-          <label class="opt"><input type="radio" name="aiToolsLearned" value="למדתי 1–2 כלים חדשים"><span class="opt-dot"></span>למדתי 1–2 כלים חדשים</label>
-          <label class="opt"><input type="radio" name="aiToolsLearned" value="לא למדתי שום דבר חדש"><span class="opt-dot"></span>לא למדתי שום דבר חדש</label>
+          <label class="opt"><input type="radio" name="aiToolsLearned" value="למדתי על כלים רבים חדשים"><span class="opt-check"></span><span class="opt-emoji">🚀</span>למדתי על כלים רבים חדשים</label>
+          <label class="opt"><input type="radio" name="aiToolsLearned" value="למדתי 1–2 כלים חדשים"><span class="opt-check"></span><span class="opt-emoji">💡</span>למדתי 1–2 כלים חדשים</label>
+          <label class="opt"><input type="radio" name="aiToolsLearned" value="לא למדתי שום דבר חדש"><span class="opt-check"></span><span class="opt-emoji">😐</span>לא למדתי שום דבר חדש</label>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.3s">
-        <div class="q-label"><span class="dot"></span>האם תגיעו לכנס הבא?</div>
+      <div class="question" data-a style="transition-delay:.24s">
+        <div class="q-label"><span class="q-dot"></span>האם תגיעו לכנס הבא?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="futureAttendance" value="בהחלט אגיע"><span class="opt-dot"></span>בהחלט אגיע</label>
-          <label class="opt"><input type="radio" name="futureAttendance" value="לא בטוח, תלוי במרצים"><span class="opt-dot"></span>לא בטוח, תלוי במרצים</label>
-          <label class="opt"><input type="radio" name="futureAttendance" value="לא אגיע"><span class="opt-dot"></span>לא אגיע</label>
+          <label class="opt"><input type="radio" name="futureAttendance" value="בהחלט אגיע"><span class="opt-check"></span><span class="opt-emoji">🙋</span>בהחלט אגיע</label>
+          <label class="opt"><input type="radio" name="futureAttendance" value="לא בטוח, תלוי במרצים"><span class="opt-check"></span><span class="opt-emoji">🤔</span>לא בטוח, תלוי במרצים</label>
+          <label class="opt"><input type="radio" name="futureAttendance" value="לא אגיע"><span class="opt-check"></span><span class="opt-emoji">🙅</span>לא אגיע</label>
         </div>
       </div>
 
@@ -398,44 +516,44 @@
     </div>
   </div>
 
-  <!-- 2: Content -->
+  <!-- ── 2: Content ── -->
   <div class="section" id="section-2">
-    <div class="section-inner">
+    <div class="section-card">
       <span class="tag">תוכן</span>
       <h2>על תוכן הכנס</h2>
       <p class="desc">עזרו לנו לכוון טוב יותר את התוכן לכנס הבא</p>
 
-      <div class="question" data-animate>
-        <div class="q-label"><span class="dot"></span>עד כמה התוכן היה מעשי ומובן?</div>
+      <div class="question" data-a>
+        <div class="q-label"><span class="q-dot"></span>עד כמה התוכן היה מעשי ומובן?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="contentPracticality" value="מעשי ומובן מאוד"><span class="opt-dot"></span>מעשי ומובן מאוד</label>
-          <label class="opt"><input type="radio" name="contentPracticality" value="מעשי במידה מסוימת"><span class="opt-dot"></span>מעשי במידה מסוימת</label>
-          <label class="opt"><input type="radio" name="contentPracticality" value="לא מעשי בכלל"><span class="opt-dot"></span>לא מעשי בכלל</label>
+          <label class="opt"><input type="radio" name="contentPracticality" value="מעשי ומובן מאוד"><span class="opt-check"></span><span class="opt-emoji">💎</span>מעשי ומובן מאוד</label>
+          <label class="opt"><input type="radio" name="contentPracticality" value="מעשי במידה מסוימת"><span class="opt-check"></span><span class="opt-emoji">👍</span>מעשי במידה מסוימת</label>
+          <label class="opt"><input type="radio" name="contentPracticality" value="לא מעשי בכלל"><span class="opt-check"></span><span class="opt-emoji">😕</span>לא מעשי בכלל</label>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.1s">
-        <div class="q-label"><span class="dot"></span>מה הייתה רמת התוכן ביחס לידע שלכם?</div>
+      <div class="question" data-a style="transition-delay:.1s">
+        <div class="q-label"><span class="q-dot"></span>מה הייתה רמת התוכן ביחס לידע שלכם?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="contentLevel" value="בסיסי מדי"><span class="opt-dot"></span>בסיסי מדי — ידעתי את רוב הדברים</label>
-          <label class="opt"><input type="radio" name="contentLevel" value="מתאים בדיוק"><span class="opt-dot"></span>מתאים בדיוק לרמה שלי</label>
-          <label class="opt"><input type="radio" name="contentLevel" value="מתקדם מדי"><span class="opt-dot"></span>מתקדם מדי — היה קשה לעקוב</label>
+          <label class="opt"><input type="radio" name="contentLevel" value="בסיסי מדי"><span class="opt-check"></span><span class="opt-emoji">📖</span>בסיסי מדי — ידעתי את רוב הדברים</label>
+          <label class="opt"><input type="radio" name="contentLevel" value="מתאים בדיוק"><span class="opt-check"></span><span class="opt-emoji">🎯</span>מתאים בדיוק לרמה שלי</label>
+          <label class="opt"><input type="radio" name="contentLevel" value="מתקדם מדי"><span class="opt-check"></span><span class="opt-emoji">🤯</span>מתקדם מדי — היה קשה לעקוב</label>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.2s">
+      <div class="question" data-a style="transition-delay:.2s">
         <div class="q-label">
-          <span class="dot"></span>אילו נושאים הייתם רוצים לראות בכנס הבא?
-          <span style="font-weight:400;font-size:13px;color:var(--muted);margin-right:4px">(ניתן לסמן כמה)</span>
+          <span class="q-dot"></span>נושאים לכנס הבא
+          <span class="q-optional">(ניתן לסמן כמה)</span>
         </div>
         <div class="options" id="topics-options">
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="Generative AI לדיזיין ויזואלי"><span class="opt-dot" style="border-radius:4px"></span>Generative AI לדיזיין ויזואלי</label>
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="AI לחקר משתמשים ו-UX"><span class="opt-dot" style="border-radius:4px"></span>AI לחקר משתמשים ו-UX</label>
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="כלי AI לפרודקטיביות יומיומית"><span class="opt-dot" style="border-radius:4px"></span>כלי AI לפרודקטיביות יומיומית</label>
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="AI בשיווק ופרסום"><span class="opt-dot" style="border-radius:4px"></span>AI בשיווק ופרסום</label>
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="אתיקה ועתיד AI"><span class="opt-dot" style="border-radius:4px"></span>אתיקה ועתיד AI</label>
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="AI לניהול מוצר ו-Product Strategy"><span class="opt-dot" style="border-radius:4px"></span>AI לניהול מוצר ו-Product Strategy</label>
-          <label class="opt"><input type="checkbox" name="topicsForNext" value="Workshop מעשי עם כלים"><span class="opt-dot" style="border-radius:4px"></span>Workshop מעשי עם כלים</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="Generative AI לדיזיין ויזואלי"><span class="opt-check"></span><span class="opt-emoji">🎨</span>Generative AI לדיזיין ויזואלי</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="AI לחקר משתמשים ו-UX"><span class="opt-check"></span><span class="opt-emoji">🔬</span>AI לחקר משתמשים ו-UX</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="כלי AI לפרודקטיביות יומיומית"><span class="opt-check"></span><span class="opt-emoji">⚡</span>כלי AI לפרודקטיביות יומיומית</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="AI בשיווק ופרסום"><span class="opt-check"></span><span class="opt-emoji">📣</span>AI בשיווק ופרסום</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="אתיקה ועתיד AI"><span class="opt-check"></span><span class="opt-emoji">🧠</span>אתיקה ועתיד AI</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="AI לניהול מוצר ו-Product Strategy"><span class="opt-check"></span><span class="opt-emoji">📊</span>AI לניהול מוצר ו-Product Strategy</label>
+          <label class="opt checkbox-opt"><input type="checkbox" name="topicsForNext" value="Workshop מעשי עם כלים"><span class="opt-check"></span><span class="opt-emoji">🛠️</span>Workshop מעשי עם כלים</label>
         </div>
       </div>
 
@@ -447,43 +565,51 @@
     </div>
   </div>
 
-  <!-- 3: Logistics -->
+  <!-- ── 3: Logistics ── -->
   <div class="section" id="section-3">
-    <div class="section-inner">
+    <div class="section-card">
       <span class="tag">לוגיסטיקה</span>
       <h2>דרגו את הלוגיסטיקה</h2>
       <p class="desc">1 = גרוע &nbsp;·&nbsp; 5 = מצוין</p>
 
-      <div class="logistics-block" data-animate>
+      <div class="logistics-block" data-a>
         <div class="log-row">
-          <span class="log-label">חוויית האוכל</span>
+          <span class="log-label">🍽️&nbsp; חוויית האוכל</span>
           <div class="star-rating" id="stars-foodRating">
-            <button class="star" data-value="5">★</button><button class="star" data-value="4">★</button>
-            <button class="star" data-value="3">★</button><button class="star" data-value="2">★</button>
+            <button class="star" data-value="5">★</button>
+            <button class="star" data-value="4">★</button>
+            <button class="star" data-value="3">★</button>
+            <button class="star" data-value="2">★</button>
             <button class="star" data-value="1">★</button>
           </div>
         </div>
         <div class="log-row">
-          <span class="log-label">נגישות המיקום</span>
+          <span class="log-label">📍&nbsp; נגישות המיקום</span>
           <div class="star-rating" id="stars-venueRating">
-            <button class="star" data-value="5">★</button><button class="star" data-value="4">★</button>
-            <button class="star" data-value="3">★</button><button class="star" data-value="2">★</button>
+            <button class="star" data-value="5">★</button>
+            <button class="star" data-value="4">★</button>
+            <button class="star" data-value="3">★</button>
+            <button class="star" data-value="2">★</button>
             <button class="star" data-value="1">★</button>
           </div>
         </div>
         <div class="log-row">
-          <span class="log-label">תהליך הרישום</span>
+          <span class="log-label">✅&nbsp; תהליך הרישום</span>
           <div class="star-rating" id="stars-registrationRating">
-            <button class="star" data-value="5">★</button><button class="star" data-value="4">★</button>
-            <button class="star" data-value="3">★</button><button class="star" data-value="2">★</button>
+            <button class="star" data-value="5">★</button>
+            <button class="star" data-value="4">★</button>
+            <button class="star" data-value="3">★</button>
+            <button class="star" data-value="2">★</button>
             <button class="star" data-value="1">★</button>
           </div>
         </div>
         <div class="log-row">
-          <span class="log-label">נטוורקינג ואנשים שפגשתם</span>
+          <span class="log-label">🤝&nbsp; נטוורקינג ואנשים</span>
           <div class="star-rating" id="stars-networkingRating">
-            <button class="star" data-value="5">★</button><button class="star" data-value="4">★</button>
-            <button class="star" data-value="3">★</button><button class="star" data-value="2">★</button>
+            <button class="star" data-value="5">★</button>
+            <button class="star" data-value="4">★</button>
+            <button class="star" data-value="3">★</button>
+            <button class="star" data-value="2">★</button>
             <button class="star" data-value="1">★</button>
           </div>
         </div>
@@ -497,15 +623,14 @@
     </div>
   </div>
 
-  <!-- 4: Favorite Sessions — large speaker grid -->
+  <!-- ── 4: Favorite Sessions ── -->
   <div class="section" id="section-4">
-    <div class="section-inner">
+    <div class="section-card">
       <span class="tag">הרצאות מועדפות</span>
       <h2>מי היו המרצים האהובים?</h2>
-      <p class="desc">לחצו על כל מרצה שנהניתם ממנו (ניתן לדלג)</p>
-
+      <p class="desc">לחצו על המרצים שנהניתם מהם — ניתן לדלג</p>
       <div class="speaker-grid" id="speakers-chips"></div>
-
+      <div class="err" id="error-4">יש לבחור לפחות מרצה אחד שנהניתם ממנו</div>
       <div class="divider"></div>
       <div class="btn-group">
         <button class="btn btn-ghost" onclick="back()">← חזרה</button>
@@ -514,60 +639,57 @@
     </div>
   </div>
 
-  <!-- 5: Speaker Ratings — large grid with stars -->
+  <!-- ── 5: Speaker Ratings ── -->
   <div class="section" id="section-5">
-    <div class="section-inner">
+    <div class="section-card">
       <span class="tag">דירוג מרצים</span>
       <h2>דרגו את ההרצאות</h2>
-      <p class="desc">דרגו רק את ההרצאות שצפיתם בהן</p>
-
+      <p class="desc">דרגו רק ההרצאות שצפיתם בהן</p>
       <div class="rating-grid" id="speaker-ratings-list"></div>
-
-      <div class="btn-group" style="margin-top:20px">
+      <div class="err" id="error-5">יש לדרג כל מרצה שצפיתם בו, או ללחוץ "לא צפיתי" על כל שאר המרצים</div>
+      <div class="btn-group" style="margin-top:16px">
         <button class="btn btn-ghost" onclick="back()">← חזרה</button>
         <button class="btn btn-primary" onclick="next()">הבא ←</button>
       </div>
     </div>
   </div>
 
-  <!-- 6: Recommendation + Feedback -->
+  <!-- ── 6: Final Questions ── -->
   <div class="section" id="section-6">
-    <div class="section-inner">
+    <div class="section-card">
       <span class="tag">סיום</span>
       <h2>כמה שאלות אחרונות</h2>
 
-      <div class="question" data-animate>
-        <div class="q-label"><span class="dot"></span>האם תמליצו לעמיתים על הכנס?</div>
+      <div class="question" data-a>
+        <div class="q-label"><span class="q-dot"></span>האם תמליצו לעמיתים על הכנס?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="recommendation" value="בהחלט אמליץ"><span class="opt-dot"></span>בהחלט אמליץ</label>
-          <label class="opt"><input type="radio" name="recommendation" value="תלוי בתוכן"><span class="opt-dot"></span>תלוי בתוכן</label>
-          <label class="opt"><input type="radio" name="recommendation" value="לא אמליץ"><span class="opt-dot"></span>לא אמליץ</label>
+          <label class="opt"><input type="radio" name="recommendation" value="בהחלט אמליץ"><span class="opt-check"></span><span class="opt-emoji">🔥</span>בהחלט אמליץ</label>
+          <label class="opt"><input type="radio" name="recommendation" value="תלוי בתוכן"><span class="opt-check"></span><span class="opt-emoji">🤷</span>תלוי בתוכן</label>
+          <label class="opt"><input type="radio" name="recommendation" value="לא אמליץ"><span class="opt-check"></span><span class="opt-emoji">🙅</span>לא אמליץ</label>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.1s">
-        <div class="q-label"><span class="dot"></span>מה הדבר הכי חשוב לשפר בכנס הבא?</div>
+      <div class="question" data-a style="transition-delay:.1s">
+        <div class="q-label"><span class="q-dot"></span>מה הכי חשוב לשפר בכנס הבא?</div>
         <div class="options">
-          <label class="opt"><input type="radio" name="topImprovement" value="תוכן ורמת ההרצאות"><span class="opt-dot"></span>תוכן ורמת ההרצאות</label>
-          <label class="opt"><input type="radio" name="topImprovement" value="בחירת המרצים"><span class="opt-dot"></span>בחירת המרצים</label>
-          <label class="opt"><input type="radio" name="topImprovement" value="הזדמנויות נטוורקינג"><span class="opt-dot"></span>הזדמנויות נטוורקינג</label>
-          <label class="opt"><input type="radio" name="topImprovement" value="לוגיסטיקה ואירגון"><span class="opt-dot"></span>לוגיסטיקה ואירגון</label>
-          <label class="opt"><input type="radio" name="topImprovement" value="מיקום ונגישות"><span class="opt-dot"></span>מיקום ונגישות</label>
-          <label class="opt"><input type="radio" name="topImprovement" value="הכנס מצוין כפי שהוא"><span class="opt-dot"></span>הכנס מצוין כפי שהוא</label>
+          <label class="opt"><input type="radio" name="topImprovement" value="תוכן ורמת ההרצאות"><span class="opt-check"></span><span class="opt-emoji">🎤</span>תוכן ורמת ההרצאות</label>
+          <label class="opt"><input type="radio" name="topImprovement" value="בחירת המרצים"><span class="opt-check"></span><span class="opt-emoji">🌟</span>בחירת המרצים</label>
+          <label class="opt"><input type="radio" name="topImprovement" value="הזדמנויות נטוורקינג"><span class="opt-check"></span><span class="opt-emoji">🤝</span>הזדמנויות נטוורקינג</label>
+          <label class="opt"><input type="radio" name="topImprovement" value="לוגיסטיקה ואירגון"><span class="opt-check"></span><span class="opt-emoji">📋</span>לוגיסטיקה ואירגון</label>
+          <label class="opt"><input type="radio" name="topImprovement" value="מיקום ונגישות"><span class="opt-check"></span><span class="opt-emoji">📍</span>מיקום ונגישות</label>
+          <label class="opt"><input type="radio" name="topImprovement" value="הכנס מצוין כפי שהוא"><span class="opt-check"></span><span class="opt-emoji">💯</span>הכנס מצוין כפי שהוא</label>
         </div>
       </div>
 
-      <div class="question" data-animate style="transition-delay:0.2s">
+      <div class="question" data-a style="transition-delay:.2s">
         <div class="q-label">
-          יש מחשבות נוספות?&nbsp;
-          <span style="font-weight:400;color:var(--muted)">(לא חובה)</span>
+          <span class="q-dot"></span>מחשבות נוספות?
+          <span class="q-optional">(לא חובה)</span>
         </div>
         <textarea id="openFeedback" class="feedback-textarea"
           placeholder="כל מחשבה, הצעה, ביקורת בונה — שתפו אותנו..."
           maxlength="2000"></textarea>
-        <div style="text-align:left;font-size:11px;color:var(--muted);margin-top:4px">
-          <span id="charCount">0</span>/2000
-        </div>
+        <div class="char-counter"><span id="charCount">0</span>/2000</div>
       </div>
 
       <div class="err" id="error-6">יש לבחור האם תמליצו ומה הכי חשוב לשפר</div>
@@ -578,32 +700,33 @@
     </div>
   </div>
 
-  <!-- 7: Thank You -->
+  <!-- ── 7: Thank You ── -->
   <div class="section" id="section-7">
-    <div class="section-inner" style="text-align:center">
+    <div class="section-card" style="text-align:center">
       <div class="success-ring">✓</div>
-      <div class="logo-wrap" style="margin-bottom:18px">
+      <div class="logo-wrap" style="margin-bottom:16px">
         <img src="/logo.svg" alt="Design AI" style="width:90px;filter:brightness(0) invert(1);opacity:0.8">
       </div>
-      <h1 style="font-size:36px">תודה רבה!</h1>
-      <p class="desc" style="max-width:360px;margin:0 auto 32px">
-        המשוב שלכם נשמר ויעזור לנו לבנות כנס Design AI 8.0 עוד יותר טוב.
+      <h1 style="font-size:38px;margin-bottom:12px">תודה רבה! 🙏</h1>
+      <p class="desc" style="max-width:340px;margin:0 auto 28px">
+        המשוב שלכם נשמר ויעזור לנו לבנות כנס<br>Design AI 8.0 עוד יותר טוב.
       </p>
-      <div style="display:inline-block;padding:14px 28px;background:var(--card);border:1.5px solid var(--border);border-radius:12px">
-        <p style="color:var(--muted);font-size:14px;font-weight:600">נתראה בכנס הבא 🚀</p>
+      <div style="display:inline-block;padding:14px 24px;background:rgba(44,255,223,0.06);border:1px solid rgba(44,255,223,0.2);border-radius:12px">
+        <p style="color:var(--cyan);font-size:14px;font-weight:700">נתראה בכנס הבא 🚀</p>
       </div>
     </div>
   </div>
 
-</div><!-- survey-wrapper -->
+</div>
 
 <script>
-  // ════ CONFIG ════
+  // ─── Config ───────────────────────────────────────
   const CONFIG = { appsScriptUrl: 'PASTE_YOUR_APPS_SCRIPT_URL_HERE' };
 
-  // ── Speakers ──────────────────────────────────────
+  // ─── Speakers ─────────────────────────────────────
   const SPEAKERS = [
     { name: 'דניאל בוארון',         role: 'מייסד DESIGN AI',                          img: '/speakers/daniel.png' },
+    { name: 'עומרי הרמן',           role: 'Founder at Spring',                         img: 'https://designai.co.il/wp-content/uploads/2026/04/%D7%A2%D7%9E%D7%A8%D7%99.png' },
     { name: 'גל דולב',              role: 'Product Manager & AI Thought Leader',       img: '/speakers/gal.png' },
     { name: 'טל זגורי',             role: 'AI Storyteller | מנהל מוצר',               img: '/speakers/tal.png' },
     { name: 'שחר קגן',              role: 'Freelance UX.UI.PM',                        img: '/speakers/shachar.png' },
@@ -616,28 +739,30 @@
     { name: 'ענבל ברקוביץ',         role: 'Head of UX, Ocean',                         img: '/speakers/inbal.png' },
   ];
 
-  // ── State ──────────────────────────────────────────
+  // ─── State ────────────────────────────────────────
   const TOTAL = 8;
   let current = 0;
   const answers = {
-    overallRating:0, attendance:null, aiToolsLearned:null, futureAttendance:null,
-    contentPracticality:null, contentLevel:null, topicsForNext:[],
-    foodRating:0, venueRating:0, registrationRating:0, networkingRating:0,
-    favoriteSessions:[], speakerRatings:{},
-    recommendation:null, topImprovement:null, openFeedback:''
+    overallRating: 0, attendance: null, aiToolsLearned: null, futureAttendance: null,
+    contentPracticality: null, contentLevel: null, topicsForNext: [],
+    foodRating: 0, venueRating: 0, registrationRating: 0, networkingRating: 0,
+    favoriteSessions: [], speakerRatings: {},
+    recommendation: null, topImprovement: null, openFeedback: ''
   };
   SPEAKERS.forEach(s => { answers.speakerRatings[s.name] = 0; });
+  const seenSpeakers = new Set(); // speakers rated OR skipped
 
-  // ── Build speaker chips (section 4) ───────────────
+  // ─── Build speaker chips ───────────────────────────
   function buildChips() {
     document.getElementById('speakers-chips').innerHTML = SPEAKERS.map(s => `
       <label class="sp-chip" id="chip-${sid(s.name)}">
-        <input type="checkbox" value="${e(s.name)}">
+        <input type="checkbox" value="${esc(s.name)}">
         <div class="sp-chip-inner">
-          <img class="sp-avatar" src="${e(s.img)}" alt="" loading="lazy">
+          <span class="sp-chip-check">✓</span>
+          <img class="sp-avatar" src="${esc(s.img)}" alt="" loading="lazy" onerror="this.style.background='#1a1d4e'">
           <div class="sp-info">
-            <div class="sp-name">${e(s.name)}</div>
-            ${s.role ? `<div class="sp-role">${e(s.role)}</div>` : ''}
+            <div class="sp-name">${esc(s.name)}</div>
+            ${s.role ? `<div class="sp-role">${esc(s.role)}</div>` : ''}
           </div>
         </div>
       </label>
@@ -652,27 +777,27 @@
     });
   }
 
-  // ── Build rating cards (section 5) ───────────────
+  // ─── Build rating cards ────────────────────────────
   function buildRatings() {
     document.getElementById('speaker-ratings-list').innerHTML = SPEAKERS.map(s => `
       <div class="rating-card" id="rc-${sid(s.name)}">
-        <img class="sp-avatar" src="${e(s.img)}" alt="" loading="lazy">
+        <img class="sp-avatar" src="${esc(s.img)}" alt="" loading="lazy" onerror="this.style.background='#1a1d4e'">
         <div class="sp-info">
-          <div class="sp-name">${e(s.name)}</div>
-          ${s.role ? `<div class="sp-role">${e(s.role)}</div>` : ''}
+          <div class="sp-name">${esc(s.name)}</div>
+          ${s.role ? `<div class="sp-role">${esc(s.role)}</div>` : ''}
         </div>
-        <div class="star-row" id="rs-${sid(s.name)}">
+        <div class="rc-stars" id="rs-${sid(s.name)}">
           <button class="star" data-value="5">★</button>
           <button class="star" data-value="4">★</button>
           <button class="star" data-value="3">★</button>
           <button class="star" data-value="2">★</button>
           <button class="star" data-value="1">★</button>
         </div>
-        <button class="skip" id="sk-${sid(s.name)}" onclick="skipSpeaker('${e(s.name)}')">לא צפיתי</button>
+        <button class="rc-skip" id="sk-${sid(s.name)}" onclick="skipSpeaker('${esc(s.name)}')">לא צפיתי</button>
       </div>
     `).join('');
 
-    document.querySelectorAll('.rating-card .star-row').forEach(row => {
+    document.querySelectorAll('.rating-card .rc-stars').forEach(row => {
       const card = row.closest('.rating-card');
       const name = SPEAKERS.find(s => `rc-${sid(s.name)}` === card.id)?.name;
       if (!name) return;
@@ -683,8 +808,9 @@
           val = v; dispStars(row, val);
           answers.speakerRatings[name] = val;
           card.classList.toggle('rated', val > 0);
+          seenSpeakers.add(name);
           const sk = document.getElementById(`sk-${sid(name)}`);
-          if (sk) sk.classList.remove('active');
+          if (sk) sk.classList.remove('skipped');
         });
         star.addEventListener('mouseenter', () => hoverStars(row, v));
         star.addEventListener('mouseleave', () => dispStars(row, val));
@@ -695,13 +821,15 @@
   function skipSpeaker(name) {
     answers.speakerRatings[name] = 0;
     const sk = document.getElementById(`sk-${sid(name)}`);
-    sk.classList.toggle('active');
+    const wasSkipped = sk?.classList.contains('skipped');
+    if (sk) sk.classList.toggle('skipped');
     const row = document.getElementById(`rs-${sid(name)}`);
     if (row) dispStars(row, 0);
-    document.getElementById(`rc-${sid(name)}`).classList.remove('rated');
+    document.getElementById(`rc-${sid(name)}`)?.classList.remove('rated');
+    if (!wasSkipped) seenSpeakers.add(name); else seenSpeakers.delete(name);
   }
 
-  // ── Star helpers ──────────────────────────────────
+  // ─── Star helpers ──────────────────────────────────
   function dispStars(container, v) {
     container.querySelectorAll('.star').forEach(s => {
       s.classList.toggle('active', parseInt(s.dataset.value) <= v);
@@ -714,22 +842,25 @@
   }
 
   function initLogisticsStars() {
-    [['overallRating','stars-overallRating'],
-     ['foodRating','stars-foodRating'],['venueRating','stars-venueRating'],
-     ['registrationRating','stars-registrationRating'],['networkingRating','stars-networkingRating']]
-    .forEach(([field, id]) => {
+    [
+      ['overallRating','stars-overallRating'],
+      ['foodRating','stars-foodRating'],
+      ['venueRating','stars-venueRating'],
+      ['registrationRating','stars-registrationRating'],
+      ['networkingRating','stars-networkingRating']
+    ].forEach(([field, id]) => {
       const el = document.getElementById(id); if (!el) return;
       let val = 0;
       el.querySelectorAll('.star').forEach(star => {
         const v = parseInt(star.dataset.value);
-        star.addEventListener('click', () => { val=v; dispStars(el,val); answers[field]=val; });
-        star.addEventListener('mouseenter', () => hoverStars(el,v));
-        star.addEventListener('mouseleave', () => dispStars(el,val));
+        star.addEventListener('click', () => { val = v; dispStars(el, val); answers[field] = val; });
+        star.addEventListener('mouseenter', () => hoverStars(el, v));
+        star.addEventListener('mouseleave', () => dispStars(el, val));
       });
     });
   }
 
-  // ── Topics checkboxes ─────────────────────────────
+  // ─── Checkboxes ────────────────────────────────────
   function initTopicsCheckboxes() {
     document.querySelectorAll('input[name="topicsForNext"]').forEach(cb => {
       cb.addEventListener('change', ev => {
@@ -737,16 +868,16 @@
         const opt = ev.target.closest('.opt');
         if (ev.target.checked) {
           answers.topicsForNext.push(v);
-          opt && opt.classList.add('selected');
+          opt?.classList.add('selected');
         } else {
           answers.topicsForNext = answers.topicsForNext.filter(x => x !== v);
-          opt && opt.classList.remove('selected');
+          opt?.classList.remove('selected');
         }
       });
     });
   }
 
-  // ── Radios ─────────────────────────────────────────
+  // ─── Radios ────────────────────────────────────────
   function initRadios() {
     document.querySelectorAll('.opt input[type="radio"]').forEach(radio => {
       radio.addEventListener('change', () => {
@@ -757,25 +888,29 @@
     });
   }
 
-  // ── Goldstein fade-in (IntersectionObserver) ──────
+  // ─── Animate-in ────────────────────────────────────
   function initAnimations() {
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('visible'); });
-    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
-    document.querySelectorAll('[data-animate]').forEach(el => obs.observe(el));
+    const obs = new IntersectionObserver(entries =>
+      entries.forEach(en => { if (en.isIntersecting) en.target.classList.add('vis'); }),
+      { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
+    );
+    document.querySelectorAll('[data-a]').forEach(el => {
+      el.classList.remove('vis');
+      obs.observe(el);
+    });
   }
 
-  // ── Navigation ─────────────────────────────────────
-  function goTo(idx, dir=1) {
+  // ─── Navigation ────────────────────────────────────
+  function goTo(idx, dir = 1) {
     const cur = document.getElementById(`section-${current}`);
     const nxt = document.getElementById(`section-${idx}`);
-    cur.style.transition = 'opacity .2s ease, transform .2s ease';
+    cur.style.transition = 'opacity .18s ease, transform .18s ease';
     cur.style.opacity = '0';
-    cur.style.transform = `translateX(${dir>0?'-36px':'36px'})`;
+    cur.style.transform = `translateX(${dir > 0 ? '-40px' : '40px'})`;
     setTimeout(() => {
       cur.classList.remove('active'); cur.style.cssText = '';
       nxt.style.opacity = '0';
-      nxt.style.transform = `translateX(${dir>0?'36px':'-36px'})`;
+      nxt.style.transform = `translateX(${dir > 0 ? '40px' : '-40px'})`;
       nxt.classList.add('active');
       requestAnimationFrame(() => {
         nxt.style.transition = 'opacity .28s ease, transform .28s ease';
@@ -784,35 +919,42 @@
       });
       current = idx; updateProgress();
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 190);
+    }, 175);
   }
 
   function next() { if (ok(current)) goTo(current + 1, 1); }
   function back() { if (current > 0) goTo(current - 1, -1); }
 
   function updateProgress() {
-    document.getElementById('progressFill').style.width =
-      current === 0 ? '0%' : `${(current/(TOTAL-1))*100}%`;
-    const si = document.getElementById('stepIndicator');
-    si.textContent = (current>0 && current<TOTAL-1) ? `${current} / ${TOTAL-2}` : '';
+    const fill = current === 0 ? 0 : Math.round((current / (TOTAL - 1)) * 100);
+    document.getElementById('progressFill').style.width = fill + '%';
+    const pill = document.getElementById('stepPill');
+    if (current > 0 && current < TOTAL - 1) {
+      pill.textContent = `שלב ${current} מתוך ${TOTAL - 2}`;
+      pill.style.opacity = '1';
+    } else {
+      pill.style.opacity = '0';
+    }
   }
 
-  // ── Validation ─────────────────────────────────────
+  // ─── Validation ────────────────────────────────────
   function ok(i) {
     const el = document.getElementById(`error-${i}`);
     if (el) el.classList.remove('on');
-    if (i===1 && (!answers.overallRating||!answers.attendance||!answers.aiToolsLearned||!answers.futureAttendance)) { showErr(1); return false; }
-    if (i===2 && (!answers.contentPracticality||!answers.contentLevel)) { showErr(2); return false; }
-    if (i===3 && (!answers.foodRating||!answers.venueRating||!answers.registrationRating||!answers.networkingRating)) { showErr(3); return false; }
-    if (i===6 && (!answers.recommendation||!answers.topImprovement)) { showErr(6); return false; }
+    if (i === 1 && (!answers.overallRating || !answers.attendance || !answers.aiToolsLearned || !answers.futureAttendance)) { showErr(1); return false; }
+    if (i === 2 && (!answers.contentPracticality || !answers.contentLevel)) { showErr(2); return false; }
+    if (i === 3 && (!answers.foodRating || !answers.venueRating || !answers.registrationRating || !answers.networkingRating)) { showErr(3); return false; }
+    if (i === 4 && answers.favoriteSessions.length === 0) { showErr(4); return false; }
+    if (i === 5 && seenSpeakers.size < SPEAKERS.length) { showErr(5); return false; }
+    if (i === 6 && (!answers.recommendation || !answers.topImprovement)) { showErr(6); return false; }
     return true;
   }
   function showErr(i) {
     const el = document.getElementById(`error-${i}`);
-    if (el) { el.classList.add('on'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+    if (el) { el.classList.add('on'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   }
 
-  // ── Submit ─────────────────────────────────────────
+  // ─── Submit ────────────────────────────────────────
   async function submitSurvey() {
     if (!ok(6)) return;
     answers.openFeedback = document.getElementById('openFeedback').value.trim();
@@ -822,7 +964,7 @@
       if (CONFIG.appsScriptUrl && CONFIG.appsScriptUrl !== 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
         const fd = new FormData();
         fd.append('data', JSON.stringify(answers));
-        await fetch(CONFIG.appsScriptUrl, { method:'POST', mode:'no-cors', body:fd });
+        await fetch(CONFIG.appsScriptUrl, { method: 'POST', mode: 'no-cors', body: fd });
       } else {
         await fetch('/api/submit', {
           method: 'POST',
@@ -830,19 +972,37 @@
           body: JSON.stringify(answers)
         });
       }
-      goTo(7, 1);
+      fireConfetti();
+      setTimeout(() => goTo(7, 1), 200);
     } catch { goTo(7, 1); }
   }
 
-  // ── Utils ──────────────────────────────────────────
-  function sid(s) { return btoa(encodeURIComponent(s)).replace(/[^a-zA-Z0-9]/g,''); }
-  function e(s) { return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  // ─── Confetti ──────────────────────────────────────
+  function fireConfetti() {
+    const colors = ['#981fb6','#2cffdf','#f5c842','#ffffff','#b06bef'];
+    for (let i = 0; i < 60; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = Math.random() * 100 + 'vw';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      el.style.animationDelay = (Math.random() * 0.5) + 's';
+      el.style.width = el.style.height = (6 + Math.random() * 8) + 'px';
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }
+  }
+
+  // ─── Utils ─────────────────────────────────────────
+  function sid(s) { return btoa(encodeURIComponent(s)).replace(/[^a-zA-Z0-9]/g, ''); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
   document.getElementById('openFeedback').addEventListener('input', function() {
     document.getElementById('charCount').textContent = this.value.length;
   });
 
-  // ── Init ───────────────────────────────────────────
+  // ─── Init ──────────────────────────────────────────
   buildChips();
   buildRatings();
   initLogisticsStars();
