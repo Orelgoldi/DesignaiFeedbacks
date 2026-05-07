@@ -6,9 +6,12 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const DB_FILE = path.join(__dirname, 'responses.ndjson');
 
-// Ensure DB file exists
+// DATA_DIR: set to /data on Railway (Volume), fallback to project dir locally
+const DATA_DIR = process.env.DATA_DIR || __dirname;
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const DB_FILE = path.join(DATA_DIR, 'responses.ndjson');
 if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, '');
 
 app.use(express.json({ limit: '10mb' }));
@@ -155,7 +158,7 @@ function buildEmailHtml(r) {
 }
 
 // ---- Rehearsal feedback ----
-const REHEARSAL_DB = path.join(__dirname, 'rehearsal.ndjson');
+const REHEARSAL_DB = path.join(DATA_DIR, 'rehearsal.ndjson');
 if (!fs.existsSync(REHEARSAL_DB)) fs.writeFileSync(REHEARSAL_DB, '');
 
 function readRehearsalAll() {
