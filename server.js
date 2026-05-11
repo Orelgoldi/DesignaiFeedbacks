@@ -82,13 +82,6 @@ app.get('/api/admin/responses', (req, res) => {
   res.json(readAll().reverse());
 });
 
-// Clear all responses (admin, one-time use)
-app.post('/api/admin/clear', (req, res) => {
-  if (!isAdmin(req)) return res.status(401).json({ error: 'אין הרשאה' });
-  fs.writeFileSync(DB_FILE, '');
-  res.json({ ok: true });
-});
-
 // Stats (admin)
 app.get('/api/admin/stats', (req, res) => {
   if (!isAdmin(req)) return res.status(401).json({ error: 'אין הרשאה' });
